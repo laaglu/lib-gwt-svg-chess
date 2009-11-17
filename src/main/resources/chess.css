@@ -1,0 +1,25 @@
+/** Add css rules here for your application. */
+
+#idBoard {height:600px;}
+
+.whiteSquare {
+  fill: white;
+}
+.blackSquare {
+  fill: tan;
+}
+.blueSquare {
+  fill: url(#blue);
+}
+.greenSquare {
+  fill: url(#green);
+}
+.yellowSquare {
+  fill: url(#yellow);
+}
+.redSquare {
+  fill: url(#red);
+}
+.categoryLabel {
+  font-weight:bold;
+}
