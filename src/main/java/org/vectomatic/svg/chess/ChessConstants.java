@@ -35,7 +35,6 @@ public interface ChessConstants extends Constants {
 
 	public String mode();
 	public String reflectionTime();
-	public String progress();
 	public String player();
 	public String history();
 	public String fen();

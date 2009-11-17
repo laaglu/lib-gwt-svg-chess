@@ -55,6 +55,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DecoratorPanel;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalSplitPanel;
@@ -72,9 +73,9 @@ import com.google.gwt.widgetideas.client.SliderBar.LabelFormatter;
 // TODO: define an GWT compatible API on OMSVGElement to manipulate CSS class and styles
 
 public class Main implements EntryPoint, SearchObserver {
-	interface Binder extends UiBinder<DecoratorPanel, Main> {
+	interface MainBinder extends UiBinder<DecoratorPanel, Main> {
 	}
-	private static Binder binder = GWT.create(Binder.class);
+	private static MainBinder mainBinder = GWT.create(MainBinder.class);
 
 	@UiField(provided=true)
 	ChessConstants constants = ChessConstants.INSTANCE;
@@ -116,7 +117,7 @@ public class Main implements EntryPoint, SearchObserver {
 	TextArea historyArea;
 	@UiField
 	Label currentPlayerValueLabel;
-
+	DialogBox confirmBox;
 
 	private SearchEngine engine;
 	int moveTimeIndex;
@@ -170,7 +171,8 @@ public class Main implements EntryPoint, SearchObserver {
 		moveTimeIndex = 0;
 
 		// Instantiate UI
-		DecoratorPanel binderPanel = binder.createAndBindUi(this);
+		DecoratorPanel binderPanel = mainBinder.createAndBindUi(this);
+		confirmBox = ConfirmBox.createConfirmBox(this);
 		advancedPanel.getHeaderTextAccessor().setText(constants.advanced());
 		
 		modeListBox.addItem(ChessMode.whitesVsComputer.getDescription(), ChessMode.whitesVsComputer.name());
@@ -262,7 +264,7 @@ public class Main implements EntryPoint, SearchObserver {
 			}
 		});
 		undoActivated = true;
-		restart(null);
+		restart();
 	}
 	
 	public int getCurrentToken() {
@@ -316,15 +318,15 @@ public class Main implements EntryPoint, SearchObserver {
 		switch (engine.getBoard().isEndGame()) {
 			case 1 :
 				Window.alert(ChessConstants.INSTANCE.whitesWin());
-				restart(null);
+				restart();
 				break;
 			case -1:
 				Window.alert(ChessConstants.INSTANCE.blacksWin());
-				restart(null);
+				restart();
 				break;
 			case 99:
 				Window.alert(ChessConstants.INSTANCE.draw());
-				restart(null);
+				restart();
 				break;
 			default:
 				currentPlayerValueLabel.setText(engine.getBoard().getTurn() ? ChessConstants.INSTANCE.white() : ChessConstants.INSTANCE.black());
@@ -378,10 +380,7 @@ public class Main implements EntryPoint, SearchObserver {
 	}
 
 
-	@UiHandler("restartButton")
-	public void restart(ClickEvent event) {
-		GWT.log("restart(" + event + ")", null);
-		
+	public void restart() {
 		undoActivated = false;
 		for (int i = 0; i < undoableMoveCount; i++) {
 			History.back();
@@ -414,6 +413,11 @@ public class Main implements EntryPoint, SearchObserver {
 		GWT.log("modeChange(" + event + ")", null);
 		nextMove();
 	}
-
-
+	
+	@UiHandler("restartButton")
+	public void confirmRestart(ClickEvent event) {
+        confirmBox.center();
+        confirmBox.show();
+    }
+	
 }
