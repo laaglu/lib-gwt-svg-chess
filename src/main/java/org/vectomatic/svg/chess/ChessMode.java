@@ -17,6 +17,9 @@
  **********************************************/
 package org.vectomatic.svg.chess;
 
+/**
+ * Enum to represent possible game modes
+ */
 public enum ChessMode {
 	whitesVsBlacks {
 		public String getDescription() {

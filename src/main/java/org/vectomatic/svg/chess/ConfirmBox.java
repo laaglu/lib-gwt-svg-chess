@@ -9,6 +9,9 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+/**
+ * UI panel to ask for confirmation upon game restart
+ */
 public class ConfirmBox {
 	interface RestartBinder extends UiBinder<VerticalPanel, ConfirmBox> {
 	}

@@ -52,7 +52,7 @@ import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Element;
 
 /**
- * 
+ * Class to update the SVG chess board
  * Representations used for the chessboard:
  * <dl>
  * <dt>index</dt><dd>int 0 ... 63</dd>
@@ -62,7 +62,7 @@ import com.google.gwt.user.client.Element;
  * </dl>
  * @author Lukas Laag (laaglu@gmail.com)
  */
-public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDownHandler, MouseUpHandler, MouseMoveHandler {
+public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHandler {
 	private static final String NS_SVG = "http://www.w3.org/2000/svg";
 	private static final String NS_XLINK = "http://www.w3.org/1999/xlink";
 
@@ -70,14 +70,13 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 	private OMSVGSVGElement svgElt;
 	private OMSVGGElement boardElt;
 	private OMDocument boardDoc;
-//	private OMSVGMatrix m;
 	private OMSVGUseElement targetPiece;
 	private int sqWidth;
 	private int sqHeight;
 
 	private Board board;
 	private MoveGenerator legalMoveGenerator;
-	private enum ChessMode {
+	private enum BoardMode {
 		SRC_MODE,
 		DEST_MODE
 	};
@@ -106,7 +105,7 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 	/**
 	 * Current UI mode: select either source or dest index
 	 */
-	private ChessMode mode;
+	private BoardMode mode;
 	
 	private Main main;
 	
@@ -118,20 +117,12 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 		this.boardElt = boardDoc.getElementById("board").cast();
 		this.css = Resources.INSTANCE.getCss();
 		this.srcToDestIndex = new HashMap<Integer, Set<Integer>>();
-//		this.m = boardElt.getScreenCTM().inverse();
-		this.mode = ChessMode.SRC_MODE;
+		this.mode = BoardMode.SRC_MODE;
 		this.srcIndex = -1;
 		this.destIndex = -1;
 		OMSVGRectElement sqElement = boardDoc.getElementById("a1").cast();
 		this.sqWidth = Integer.parseInt(sqElement.getAttribute("width"));
 		this.sqHeight = Integer.parseInt(sqElement.getAttribute("height"));
-//		GWT.log("m = " + toString(m), null);
-//		GWT.log("svgElt.getTransformToElement(boardElt) = " + toString(svgElt.getTransformToElement(boardElt)), null);
-//		GWT.log("svgElt.getCTM() = " + toString(svgElt.getCTM()), null);
-//		GWT.log("boardElt.getCTM() = " + toString(boardElt.getCTM()), null);
-//		GWT.log("svgElt.getScreenCTM()  = " + toString(svgElt.getScreenCTM() ), null);
-//		GWT.log("boardElt.getScreenCTM() = " + toString(boardElt.getScreenCTM()), null);
-
 
 		// Legal moves logic
 		legalMoveGenerator = new LegalMoveGenerator();
@@ -141,14 +132,16 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 		// Wire events
 		boardElt.addMouseMoveHandler(this);
 		boardElt.addMouseUpHandler(this);
-//		boardElt.addMouseOutHandler(this);
-//		boardElt.addMouseOverHandler(this);
 	}
 	
-//	  public static final native Element createElementNS(Document doc, String namespaceURI, String qualifiedName) /*-{
-//	    return doc.createElementNS(namespaceURI, qualifiedName);
-//	  }-*/;
-	
+	/**
+	 * Adds a new piece to the chessboard. Pieces are represented
+	 * by svg &lt;use&gt; elements
+	 * @param piece
+	 * The piece to add
+	 * @param algebraic
+	 * The position
+	 */
 	public void addPiece(char piece, String algebraic) {
 		if (piece != '.') {
 			OMSVGElement squareElt = boardDoc.getElementById(algebraic).cast();
@@ -163,12 +156,15 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 			useElt.addMouseDownHandler(this);
 			useElt.addMouseMoveHandler(this);
 			useElt.addMouseUpHandler(this);
-//			useElt.addMouseOverHandler(this);
-//			useElt.addMouseOutHandler(this);
 			boardElt.appendChild(useElt);
 		}
 	}
 	
+	/**
+	 * Removes a piece from the chessboard at the specified position
+	 * @param algebraic
+	 * The position
+	 */
 	public void removePiece(String algebraic) {
 		OMSVGUseElement useElt = boardDoc.getElementById(algebraic + "_").cast();
 		if (useElt != null) {
@@ -176,6 +172,12 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 		}
 	}
 	
+	/**
+	 * Returns the piece at the specified position
+	 * @param algebraic
+	 * The position
+	 * @return
+	 */
 	public char getPiece(String algebraic) {
 		OMSVGUseElement useElt = boardDoc.getElementById(algebraic + "_").cast();
 		if (useElt != null) {
@@ -190,6 +192,11 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 		return '.';
 	}
 	
+	/**
+	 * Update the chessboard
+	 * @param force
+	 * Force the recomputation of possible moves
+	 */
 	public void update(boolean force) {
 		// If the move number has changed, update the possible
 		// legal moves
@@ -222,7 +229,7 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 				if (destIndices.contains(index)) {
 					className = css.blueSquare();
 				}
-				if (mode == ChessMode.DEST_MODE && index == destIndex) {
+				if (mode == BoardMode.DEST_MODE && index == destIndex) {
 					className = destIndices.contains(index) ? css.greenSquare() : css.redSquare();
 				}
 				if (index == srcIndex) {
@@ -246,13 +253,10 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 
 	@Override
 	public void onMouseDown(MouseDownEvent event) {
-//		GWT.log("m: " + toString(m), null);
-//		GWT.log("matrix: " + toString(boardElt.getScreenCTM().inverse()), null);
-//		GWT.log("width: " + boardDoc.getElementById("a1").getAttribute("width"), null);
 		GWT.log("onMouseDown(" + toString(event) + "))", null);
 		targetPiece = event.getNativeEvent().getEventTarget().cast();
 		this.destIndex = BitboardUtils.algebraic2Index(getIndex(targetPiece));
-		mode = ChessMode.DEST_MODE;
+		mode = BoardMode.DEST_MODE;
 		x = event.getClientX();
 		y = event.getClientY();
 		update(false);
@@ -263,17 +267,10 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 	@Override
 	public void onMouseUp(MouseUpEvent event) {
 		GWT.log("onMouseUp(" + toString(event) + "))", null);
-//		GWT.log("m = " + toString(m), null);
-//		GWT.log("svgElt.getTransformToElement(boardElt) = " + toString(svgElt.getTransformToElement(boardElt)), null);
-//		GWT.log("svgElt.getCTM() = " + toString(svgElt.getCTM()), null);
-//		GWT.log("boardElt.getCTM() = " + toString(boardElt.getCTM()), null);
-//		GWT.log("svgElt.getScreenCTM()  = " + toString(svgElt.getScreenCTM() ), null);
-//		GWT.log("boardElt.getScreenCTM() = " + toString(boardElt.getScreenCTM()), null);
-		
 
 		if (targetPiece != null) {
 			DOM.releaseCapture((Element)targetPiece.cast());
-			mode = ChessMode.SRC_MODE;
+			mode = BoardMode.SRC_MODE;
 			Set<Integer> destIndices = srcToDestIndex.containsKey(srcIndex) ? srcToDestIndex.get(srcIndex) : Collections.<Integer>emptySet();
 			if (destIndices.contains(destIndex)) {
 				final int move = Move.getFromString(board, BitboardUtils.index2Algebraic(srcIndex) + BitboardUtils.index2Algebraic(destIndex));
@@ -301,18 +298,9 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 //		GWT.log("onMouseMove(" + toString(event) + "))", null);
 		String algebraic = getAlgebraic(event);
 		int index = algebraic != null ? BitboardUtils.algebraic2Index(algebraic) : -1;
-		if (mode == ChessMode.SRC_MODE) {
+		if (mode == BoardMode.SRC_MODE) {
 			if (srcIndex != index) {
 				srcIndex = index;
-				// The purpose of this block is to unhighlight the
-				// chessboard if the pointer goes out of it
-				// Without capture, the element would not receive the
-				// mouse move since the pointer would be out of it.
-//				if (index != -1) {
-//					DOM.setCapture((Element)boardElt.cast());
-//				} else {
-//					DOM.releaseCapture((Element)boardElt.cast());
-//				}
 				update(false);
 			}
 		} else {
@@ -349,13 +337,6 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 	 * The algebraic corresponding to a mouse event
 	 */
 	public String getAlgebraic(MouseEvent event) {
-//		OMSVGElement target = event.getNativeEvent().getEventTarget().cast();
-//		OMSVGPoint p1 = svgElt.createSVGPoint();
-//		p1.setX(event.getClientX());
-//		p1.setY(event.getClientY());
-//		OMSVGPoint p2 = p1.matrixTransform(m);
-//		int x = ((int)p2.getX()) / sqWidth;
-//		int y = ((int)p2.getY()) / sqHeight;
 		
 		// Compensate viewbox/viewport transform.
 		// The viewbox/viewport transform is equivalent to a scale
@@ -363,25 +344,13 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 		float r = svgElt.getCTM().getA();
 		OMSVGMatrix m1 = svgElt.createSVGMatrix();
 		m1 = m1.scale(1 / r);
-//		GWT.log("m1 = " + toString(m1), null);
 		OMSVGMatrix m2 = svgElt.getTransformToElement(boardElt);
-//		GWT.log("m2 = " + toString(m2), null);
 		OMSVGMatrix m = m2.multiply(m1);
-//		GWT.log("m = " + toString(m), null);
 		OMSVGPoint p = svgElt.createSVGPoint();
 		p.setX(event.getRelativeX((Element)svgElt.cast()));
 		p.setY(event.getRelativeY((Element)svgElt.cast()));
 		p = p.matrixTransform(m);
-//		int x = (int)(event.getRelativeX((Element)svgElt.cast()) / r);
-//		int y = (int)(event.getRelativeY((Element)svgElt.cast()) / r);
-//		GWT.log("x = " + x + " " + (int)(x / sqWidth), null);
-//		GWT.log("y = " + y + " " + (int)(y / sqHeight), null);
-//		GWT.log("p.x = " + p.getX(), null);
-//		GWT.log("p.y = " + p.getY(), null);
 
-		
-//		int x = event.getRelativeX((Element)svgElt.cast()) / sqWidth;
-//		int y = event.getRelativeY((Element)svgElt.cast()) / sqHeight;
 		int x = (int)(p.getX() / sqWidth);
 		int y = (int)(p.getY() / sqHeight);
 		if (x >= 0 && x <= 7 && y >= 0 && y <= 7) {
@@ -448,32 +417,3 @@ public class ChessBoard implements /*MouseOutHandler, MouseOverHandler,*/MouseDo
 		return buffer.toString();
 	}
 }
-
-//
-//@Override
-//public void onMouseOver(MouseOverEvent event) {
-//	OMSVGElement target = event.getNativeEvent().getEventTarget().cast();
-//	String str = target.toString();
-//	if (str.contains("SVGRectElement") || str.contains("SVGUseElement")) {
-//		GWT.log("onMouseOver(" + toString(event) + "))", null);
-//		if (mode == ChessMode.SRC_MODE) {
-//			// Compute the index of the square of the piece
-//			// at the origin of this event
-//			srcIndex = BitboardUtils.algebraic2Index(getIndex(target));
-//		} else {
-//			destIndex = BitboardUtils.algebraic2Index(getIndex(target));
-//		}
-//		update();
-//	}
-//}
-//@Override
-//public void onMouseMove(MouseMoveEvent event) {
-//	//GWT.log("onMouseMove(" + toString(event) + "))", null);
-//	if (targetPiece != null) {
-//		int dx = event.getClientX() - x;
-//		int dy = event.getClientY() - y;
-//		targetPiece.setAttribute("x", Integer.toString(getX(srcIndex) + dx));
-//		targetPiece.setAttribute("y", Integer.toString(getY(srcIndex) + dy));
-//	}
-//}
-

@@ -70,8 +70,9 @@ import com.google.gwt.widgetideas.client.SliderBar;
 import com.google.gwt.widgetideas.client.SliderListenerAdapter;
 import com.google.gwt.widgetideas.client.SliderBar.LabelFormatter;
 
-// TODO: define an GWT compatible API on OMSVGElement to manipulate CSS class and styles
-
+/**
+ * Main class. Instantiates the UI and runs the game loop
+ */
 public class Main implements EntryPoint, SearchObserver {
 	interface MainBinder extends UiBinder<DecoratorPanel, Main> {
 	}
@@ -119,15 +120,43 @@ public class Main implements EntryPoint, SearchObserver {
 	Label currentPlayerValueLabel;
 	DialogBox confirmBox;
 
+	/**
+	 * The Carballo chess engine
+	 */
 	private SearchEngine engine;
-	int moveTimeIndex;
-	private int[] moveTimes = new int[] {3000, 10000, 30000, 60000, 180000, 600000};
+	/**
+	 * The SVG chess board
+	 */
 	private ChessBoard board;
-	private boolean undoActivated;
-	private int undoableMoveCount;
+	/**
+	 * A &lt;div&gt; element to contain the SVG root element
+	 */
 	private DivElement boardDiv;
+	/**
+	 * The root SVG element
+	 */
 	private OMSVGElement boardElt;
+	/**
+	 * Array of preset Carballo move times in ms 
+	 */
+	private int[] moveTimes = new int[] {3000, 10000, 30000, 60000, 180000, 600000};
+	/**
+	 * Index of the currently selected move time in the array
+	 */
+	private int moveTimeIndex;
+	/**
+	 * True if the handler for the browser back/forward button is activated, false otherwise
+	 */
+	private boolean undoActivated;
+	/**
+	 * Number of items in the browser undo stack
+	 */
+	private int undoableMoveCount;
 
+	/**
+	 * UiBinder factory method to instantiate HSliderBar 
+	 * @return
+	 */
 	@UiFactory
 	HSliderBar makeHSliderBar() {
 		final String[] labels = {
@@ -157,15 +186,17 @@ public class Main implements EntryPoint, SearchObserver {
 	}
 	
 	public int getHeight() {
-		return (Window.getClientHeight() - 200);
+		return (Window.getClientHeight() - 150);
 	}
 	
+	/**
+	 * GWT entry point
+	 */
 	public void onModuleLoad() {
 		// Inject CSS in the document headers
 		StyleInjector.inject(Resources.INSTANCE.getCss().getText());
 		
 		// Create a Carballo chess engine
-		//new JSONAttackGenerator2().run();
 		engine = new SearchEngine(new StaticConfig(), new JSONBook(), new JSONAttackGenerator());
 		engine.setObserver(this);
 		moveTimeIndex = 0;
@@ -181,42 +212,23 @@ public class Main implements EntryPoint, SearchObserver {
 		modeListBox.addItem(ChessMode.computerVsComputer.getDescription(), ChessMode.computerVsComputer.name());
 		modeListBox.setSelectedIndex(0);
 		
-//		modeLabel.setText(ChessConstants.INSTANCE.mode());
-//		reflectionLabel.setText(ChessConstants.INSTANCE.reflectionTime());;
-//		fenLabel.setText(ChessConstants.INSTANCE.fen());;
-//		currentPlayerLabel.setText(ChessConstants.INSTANCE.player());;
-//		ellapsedLabel.setText(ChessConstants.INSTANCE.ellapsed());;
-//		historyLabel.setText(ChessConstants.INSTANCE.history());;
-		
-//		undoButton.setText(ChessConstants.INSTANCE.undo());
-//		redoButton.setText(ChessConstants.INSTANCE.redo());
-//		suggestionButton.setText(ChessConstants.INSTANCE.suggestion());
-//		restartButton.setText(ChessConstants.INSTANCE.restart());
-//		fenButton.setText(ChessConstants.INSTANCE.setFen());
-
 		tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.settingsTab());
 		tabPanel.getTabBar().setTabText(1, ChessConstants.INSTANCE.infoTab());
 		tabPanel.selectTab(1);
 		RootPanel.get("uiRoot").add(binderPanel);
 		
-
 		// Parse the SVG chessboard and insert it in the HTML UI
+		// Note that the elements must be imported in the UI since they come from another XML document
 		boardDiv = boardContainer.getElement().cast();
 		OMSVGDocument boardDoc = SVGParser.parse(Resources.INSTANCE.getBoard().getText());
-//		Element uiRoot = DOM.getElementById("uiRoot");
 		Element boardElementTmp = boardDoc.getDocumentElement().cast();
 		boardElt = importNode(boardDiv.getOwnerDocument(), boardElementTmp, true).cast();
-//		boardDiv.setAttribute("style", "width:100%;height:100%");
 		boardDiv.appendChild((Element)boardElt.cast());
-//		DOM.getElementById("uiRoot").appendChild((Element)boardElt.cast());
-//		Board b = new Board();
-//		Window.alert("a1");
-//		b.startPosition();
-//		Window.alert("a2");
-		
+
+		// Create the object to animate the SVG chessboard
 		board = new ChessBoard(engine.getBoard(), (OMSVGSVGElement)boardElt.cast(), this);
 
-		// Handle resizing issues
+		// Handle resizing issues.
 		ResizeHandler resizeHandler = new ResizeHandler() {
 			@Override
 			public void onResize(ResizeEvent event) {
@@ -228,6 +240,8 @@ public class Main implements EntryPoint, SearchObserver {
 		};
 		Window.addResizeHandler(resizeHandler);
 		resizeHandler.onResize(null);
+		// Hack the HorizontalSplitPanel to generate an event when
+		// the splitter element is moved
 		SplitPanelHelper.addHandler(splitPanel, new MouseMoveHandler() {
 			@Override
 			public void onMouseMove(MouseMoveEvent event) {
@@ -236,19 +250,6 @@ public class Main implements EntryPoint, SearchObserver {
 				}
 			}
 		}, MouseMoveEvent.getType());
-
-		
-		// Initialize UI
-		currentPlayerValueLabel.setText(ChessConstants.INSTANCE.white());
-		
-		//TODO
-		// Mozilla bug: importNode will mess up xmlns:xlink attributes
-		// and prefix binding
-//		OMSVGElement boardElt = importNode(boardContainer.getOwnerDocument(), boardElementTmp, true).cast();
-//		boardContainer.appendChild((Node)boardElt.cast());
-//		board = new SVGBoard(engine, boardElt);
-//		boardContainer.appendChild((Node)boardElementTmp.cast());
-//		board = new ChessBoard(engine, (OMSVGSVGElement)boardElementTmp.cast());
 		
 		// Add undo-redo support through the browser back/forward buttons
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -258,7 +259,7 @@ public class Main implements EntryPoint, SearchObserver {
 				if (undoActivated) {
 					engine.getBoard().undoMove(getCurrentToken());
 					board.update(false);
-					updateHistory();
+					updateUI();
 					nextMove();
 				}
 			}
@@ -267,7 +268,12 @@ public class Main implements EntryPoint, SearchObserver {
 		restart();
 	}
 	
-	public int getCurrentToken() {
+	/**
+	 * Return the carballo index of the current move as
+	 * parsed from the browser undo/redo stack
+	 * @return
+	 */
+	private int getCurrentToken() {
 		int moveNumber = -1;
 		try {
 			String token = History.getToken();
@@ -277,6 +283,10 @@ public class Main implements EntryPoint, SearchObserver {
 		return moveNumber;
 	}
 	
+	/**
+	 * Method invoked when the HorizontalSplitPanel splitter is moved.
+	 * Resizes the SVG chessboard
+	 */
 	private void updateSplitPanel() {
 		Style style = SplitPanelHelper.getStyle(splitPanel);
 		
@@ -288,16 +298,19 @@ public class Main implements EntryPoint, SearchObserver {
 		boardDiv.getStyle().setHeight(size, Style.Unit.PX);
 		boardElt.setAttribute("width", size + Style.Unit.PX.name().toLowerCase());
 		boardElt.setAttribute("height", size + Style.Unit.PX.name().toLowerCase());
-//		div.getStyle().setWidth(value, unit);		
 	}
 
-
+	/**
+	 * Patch GWT Document.importNode, which fails to return the imported nodes
+	 */
 	public final native Node importNode(Document doc, Node node, boolean deep) /*-{
 		return doc.importNode(node, deep);
 	}-*/;
 	
-	
-	private void updateHistory() {
+	/**
+	 * Refresh the non SVG elements of the UI (list of moves, current player, FEN) 
+	 */
+	private void updateUI() {
 		StringBuffer buffer = new StringBuffer();
 		int[] moves = engine.getBoard().getMoveHistory();
 		int count = engine.getBoard().getMoveNumber();
@@ -311,10 +324,14 @@ public class Main implements EntryPoint, SearchObserver {
 		historyArea.setVisibleLines(count);
 		historyArea.setText(buffer.toString());
 		fenArea.setText(engine.getBoard().getFen());
+		currentPlayerValueLabel.setText(engine.getBoard().getTurn() ? ChessConstants.INSTANCE.white() : ChessConstants.INSTANCE.black());
 	}
 	
+	/**
+	 * Invoked to make the game advance to the next move
+	 */
 	public void nextMove() {
-		updateHistory();
+		updateUI();
 		switch (engine.getBoard().isEndGame()) {
 			case 1 :
 				Window.alert(ChessConstants.INSTANCE.whitesWin());
@@ -329,7 +346,6 @@ public class Main implements EntryPoint, SearchObserver {
 				restart();
 				break;
 			default:
-				currentPlayerValueLabel.setText(engine.getBoard().getTurn() ? ChessConstants.INSTANCE.white() : ChessConstants.INSTANCE.black());
 				ChessMode mode = ChessMode.valueOf(modeListBox.getValue(modeListBox.getSelectedIndex()));
 				switch(mode) {
 					case whitesVsBlacks:
@@ -353,6 +369,9 @@ public class Main implements EntryPoint, SearchObserver {
 
 	}
 	
+	/**
+	 * Invoked to make the computer play the next move
+	 */
 	private void computerMove() {
 		DeferredCommand.addCommand(new Command() {
 			@Override
@@ -362,24 +381,34 @@ public class Main implements EntryPoint, SearchObserver {
 		});
 	}
 
+	/**
+	 * Invoked by the carballo engine when the search is done
+	 */
 	public void bestMove(int bestMove, int ponder) {
 		GWT.log("SearchObserver.bestMove(" + Move.toStringExt(bestMove) + ", " + Move.toStringExt(ponder) + ")", null);
 		engine.getBoard().doMove(bestMove);
-//		History.newItem(Integer.toString(engine.getBoard().getMoveNumber()), false);
 		board.update(false);
 		nextMove();
 	}
 
+	/**
+	 * Unused carballo chess engine event handler
+	 */
 	public void info(SearchStatusInfo info) {
 		GWT.log("SearchObserver.info(" + info + ")", null);
 	}
 	
+	/**
+	 * Add an event to the browser undo/redo stack
+	 */
 	public void addUndoableMove() {
 		History.newItem(Integer.toString(engine.getBoard().getMoveNumber()), false);
 		undoableMoveCount++;
 	}
 
-
+	/**
+	 * Start a new game
+	 */
 	public void restart() {
 		undoActivated = false;
 		for (int i = 0; i < undoableMoveCount; i++) {
