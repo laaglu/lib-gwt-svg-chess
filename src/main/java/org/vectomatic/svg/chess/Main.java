@@ -189,6 +189,7 @@ public class Main implements EntryPoint, SearchObserver {
 		return (Window.getClientHeight() - 150);
 	}
 	
+	  
 	/**
 	 * GWT entry point
 	 */
@@ -255,7 +256,7 @@ public class Main implements EntryPoint, SearchObserver {
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> event) {
-				GWT.log("undo(" + getCurrentToken() + ", " + undoActivated + ")", null);
+				GWT.log("Main.undo(" + getCurrentToken() + ", " + undoActivated + ")", null);
 				if (undoActivated) {
 					engine.getBoard().undoMove(getCurrentToken());
 					board.update(false);
@@ -285,19 +286,29 @@ public class Main implements EntryPoint, SearchObserver {
 	
 	/**
 	 * Method invoked when the HorizontalSplitPanel splitter is moved.
-	 * Resizes the SVG chessboard
+	 * Resizes the SVG chessboard.
 	 */
 	private void updateSplitPanel() {
 		Style style = SplitPanelHelper.getStyle(splitPanel);
-		
-		int width = Integer.valueOf(style.getWidth().substring(0, style.getWidth().indexOf(Style.Unit.PX.name().toLowerCase())));
-		int height = getHeight();
-		int size = Math.min(width, height);
-		GWT.log("size = " + style.getWidth(), null);
-		boardDiv.getStyle().setWidth(size, Style.Unit.PX);
-		boardDiv.getStyle().setHeight(size, Style.Unit.PX);
-		boardElt.setAttribute("width", size + Style.Unit.PX.name().toLowerCase());
-		boardElt.setAttribute("height", size + Style.Unit.PX.name().toLowerCase());
+		String rawWidth = style.getWidth();
+		GWT.log("Main.updateSplitPanel(" + rawWidth + ")", null);
+		if (rawWidth != null && rawWidth.length() > 0) {
+			// Process events with size in pixels only
+			int index = rawWidth.indexOf(Style.Unit.PX.name().toLowerCase());
+			if (index != -1) {
+				try {
+					int width = Integer.valueOf(rawWidth.substring(0, index));
+					int height = getHeight();
+					int size = Math.min(width, height);
+					boardDiv.getStyle().setWidth(size, Style.Unit.PX);
+					boardDiv.getStyle().setHeight(size, Style.Unit.PX);
+					boardElt.setAttribute("width", size + Style.Unit.PX.name().toLowerCase());
+					boardElt.setAttribute("height", size + Style.Unit.PX.name().toLowerCase());
+				} catch(NumberFormatException e) {
+					GWT.log("Incorrect width: " + rawWidth, e);
+				}
+			}
+		}
 	}
 
 	/**
@@ -385,7 +396,7 @@ public class Main implements EntryPoint, SearchObserver {
 	 * Invoked by the carballo engine when the search is done
 	 */
 	public void bestMove(int bestMove, int ponder) {
-		GWT.log("SearchObserver.bestMove(" + Move.toStringExt(bestMove) + ", " + Move.toStringExt(ponder) + ")", null);
+		GWT.log("Main.bestMove(" + Move.toStringExt(bestMove) + ", " + Move.toStringExt(ponder) + ")", null);
 		engine.getBoard().doMove(bestMove);
 		board.update(false);
 		nextMove();
@@ -395,7 +406,7 @@ public class Main implements EntryPoint, SearchObserver {
 	 * Unused carballo chess engine event handler
 	 */
 	public void info(SearchStatusInfo info) {
-		GWT.log("SearchObserver.info(" + info + ")", null);
+		GWT.log("Main.info(" + info + ")", null);
 	}
 	
 	/**
@@ -424,7 +435,7 @@ public class Main implements EntryPoint, SearchObserver {
 	
 	@UiHandler("fenButton")
 	public void updateFen(ClickEvent event) {
-		GWT.log("updateFen(" + event + ")", null);
+		GWT.log("Main.updateFen(" + fenArea.getText() + ")", null);
 		undoActivated = false;
 		for (int i = 0; i < undoableMoveCount; i++) {
 			History.back();
@@ -439,12 +450,13 @@ public class Main implements EntryPoint, SearchObserver {
 
 	@UiHandler("modeListBox")
 	public void modeChange(ChangeEvent event) {
-		GWT.log("modeChange(" + event + ")", null);
+		GWT.log("Main.modeChange(" + modeListBox.getSelectedIndex() + ")", null);
 		nextMove();
 	}
 	
 	@UiHandler("restartButton")
 	public void confirmRestart(ClickEvent event) {
+		GWT.log("Main.confirmRestart()", null);
         confirmBox.center();
         confirmBox.show();
     }

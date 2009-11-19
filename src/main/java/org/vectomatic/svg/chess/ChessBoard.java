@@ -39,6 +39,7 @@ import com.alonsoruibal.chess.bitboard.BitboardUtils;
 import com.alonsoruibal.chess.movegen.LegalMoveGenerator;
 import com.alonsoruibal.chess.movegen.MoveGenerator;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseEvent;
@@ -250,26 +251,38 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		}
 	}
 	
+	/**
+	 * Firefox does not correctly implement the SVG event model
+	 * for SVGUseElement. Indeed, event targets ought to be
+	 * wrapped in a SVGElementInstance, which is not the case.
+	 * Other browsers (WebKit based Chrome and Safari) and Opera
+	 * do it correctly. This method unwraps the SVGElementInstance
+	 */
+	public final native OMSVGUseElement unwrap(JavaScriptObject obj) /*-{
+		return ("correspondingUseElement" in obj) ? obj.correspondingUseElement : obj;
+	}-*/;
 
 	@Override
 	public void onMouseDown(MouseDownEvent event) {
-		GWT.log("onMouseDown(" + toString(event) + "))", null);
-		targetPiece = event.getNativeEvent().getEventTarget().cast();
+//		GWT.log("onMouseDown(" + toString(event) + "))", null);
+		JavaScriptObject target = event.getNativeEvent().getEventTarget();
+		targetPiece = unwrap(target);
 		this.destIndex = BitboardUtils.algebraic2Index(getIndex(targetPiece));
 		mode = BoardMode.DEST_MODE;
 		x = event.getClientX();
 		y = event.getClientY();
 		update(false);
-		DOM.setCapture((Element)targetPiece.cast());
+		DOM.setCapture((Element)event.getNativeEvent().getEventTarget().cast());
 		update(false);
 	}
 
 	@Override
 	public void onMouseUp(MouseUpEvent event) {
-		GWT.log("onMouseUp(" + toString(event) + "))", null);
+//		GWT.log("onMouseUp(" + toString(event) + "))", null);
 
 		if (targetPiece != null) {
-			DOM.releaseCapture((Element)targetPiece.cast());
+			JavaScriptObject target = event.getNativeEvent().getEventTarget();
+			DOM.releaseCapture((Element)target.cast());
 			mode = BoardMode.SRC_MODE;
 			Set<Integer> destIndices = srcToDestIndex.containsKey(srcIndex) ? srcToDestIndex.get(srcIndex) : Collections.<Integer>emptySet();
 			if (destIndices.contains(destIndex)) {
@@ -295,8 +308,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 
 	@Override
 	public void onMouseMove(MouseMoveEvent event) {
-//		GWT.log("onMouseMove(" + toString(event) + "))", null);
 		String algebraic = getAlgebraic(event);
+		//GWT.log("onMouseMove(" + algebraic + "))", null);
 		int index = algebraic != null ? BitboardUtils.algebraic2Index(algebraic) : -1;
 		if (mode == BoardMode.SRC_MODE) {
 			if (srcIndex != index) {
@@ -325,7 +338,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	}
 
 	private String getIndex(OMSVGElement elt) {
-		return elt.getId().replace("_", "");
+		String id = elt.getId();
+		return id.replace("_", "");
 	}
 
 	/**
@@ -417,3 +431,4 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		return buffer.toString();
 	}
 }
+

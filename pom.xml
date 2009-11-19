@@ -34,11 +34,6 @@
 			<artifactId>gwt-incubator-slider</artifactId>
 			<version>0.1</version>
 		</dependency>
-		<dependency>
-			<groupId>com.google.code.gwt-log</groupId>
-			<artifactId>gwt-log</artifactId>
-			<version>2.6.0</version>
-		</dependency>
 	</dependencies>
 	<properties>
 		<google.webtoolkit.home>/home/laaglu/gwt/trunk/build/staging/gwt-0.0.0</google.webtoolkit.home>
@@ -68,6 +63,7 @@
 								<module>org.vectomatic.libgwtsvgchess</module>
 							</modules>
 							<style>DETAILED</style>
+							<!-- <style>OBF</style>-->
 							<logLevel>WARN</logLevel>
 							<extraJvmArgs>-Xmx512m</extraJvmArgs>
 							<localWorkers>1</localWorkers>
