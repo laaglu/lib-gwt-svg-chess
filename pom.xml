@@ -3,10 +3,30 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.vectomatic</groupId>
 	<artifactId>libgwtsvg-chess</artifactId>
+	<name>libgwtsvg-chess</name>
 	<packaging>war</packaging>
 	<version>0.0.1</version>
-	<name>libgwtsvg-chess Maven Webapp</name>
-	<url>http://maven.apache.org</url>
+	<description>A chess game for web browsers. It uses the Carballo chess engine for chess computations and libgwtsvg for the SVG UI. These components are integrated using GWT.</description>
+	<url>http://www.vectomatic.org/libgwtsvg-chess</url>
+	<licenses>
+		<license>
+			<name>GPLv3</name>
+			<url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>laaglu</id>
+			<name>Lukas Laag</name>
+			<email>laaglu@gmail.com</email>
+			<url>http://www.vectomatic.org</url>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>1</timezone>
+		</developer>
+	</developers>
 	<dependencies>
 		<dependency>
 			<groupId>com.google.gwt</groupId>
@@ -62,11 +82,11 @@
 							<modules>
 								<module>org.vectomatic.libgwtsvgchess</module>
 							</modules>
-							<style>DETAILED</style>
+							<style>${gwt.style}</style>
 							<!-- <style>OBF</style>-->
-							<logLevel>WARN</logLevel>
+							<logLevel>${gwt.logLevel}</logLevel>
 							<extraJvmArgs>-Xmx512m</extraJvmArgs>
-							<localWorkers>1</localWorkers>
+							<localWorkers>${gwt.localWorkers}</localWorkers>
 						</configuration>
 						<goals>
 							<goal>compile</goal>
@@ -86,4 +106,57 @@
 		</plugins>
 		<finalName>libgwtsvg-chess</finalName>
 	</build>
+	<profiles>
+		
+		<!-- There are two build profiles: development and production
+		+ by default, the production profile is assumed
+		  It builds all GWT permutations and generates reports for the website
+		+ Use the '-P development' mvn flag, or within eclipse, set the
+		  Project > Properties > Maven > Active Maven Profiles to 'development'
+		  to activate the development profile
+		 -->
+		
+		<profile>
+			<id>development</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<properties>					
+ 				<!-- Build options for development mode -->
+    			<gwt.style>DETAILED</gwt.style>
+    			<gwt.logLevel>WARN</gwt.logLevel>
+    			<gwt.localWorkers>1</gwt.localWorkers>
+    		</properties>
+		</profile>
+		<profile>
+			<id>production</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+ 				<!-- Build options for production mode -->
+    			<gwt.style>OBF</gwt.style>
+    			<gwt.logLevel>INFO</gwt.logLevel>
+    			<gwt.localWorkers>2</gwt.localWorkers>
+    		</properties>
+			<reporting>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<aggregate>true</aggregate>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jxr-plugin</artifactId>
+						<configuration>
+							<aggregate>true</aggregate>
+						</configuration>
+					</plugin>
+				</plugins>
+			</reporting>
+		</profile>
+	</profiles>
 </project>
