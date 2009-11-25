@@ -127,6 +127,13 @@
     			<gwt.logLevel>WARN</gwt.logLevel>
     			<gwt.localWorkers>1</gwt.localWorkers>
     		</properties>
+			<distributionManagement>
+				<repository>
+					<id>local-mvn</id>
+					<name>Local maven repository</name>
+					<url>scp://localhost/var/www/mvn</url>
+				</repository>
+			</distributionManagement>
 		</profile>
 		<profile>
 			<id>production</id>
@@ -157,6 +164,13 @@
 					</plugin>
 				</plugins>
 			</reporting>
+			<distributionManagement>
+				<repository>
+					<id>vectomatic-mvn</id>
+					<name>Vectomatic maven repository</name>
+					<url>scp://www.vectomatic.org/mvn</url>
+				</repository>
+			</distributionManagement>
 		</profile>
 	</profiles>
 </project>
