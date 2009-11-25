@@ -118,6 +118,9 @@ public class Main implements EntryPoint, SearchObserver {
 	TextArea historyArea;
 	@UiField
 	Label currentPlayerValueLabel;
+	@UiField
+	HTML about;
+	
 	DialogBox confirmBox;
 
 	/**
@@ -215,7 +218,9 @@ public class Main implements EntryPoint, SearchObserver {
 		
 		tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.settingsTab());
 		tabPanel.getTabBar().setTabText(1, ChessConstants.INSTANCE.infoTab());
+		tabPanel.getTabBar().setTabText(2, ChessConstants.INSTANCE.aboutTab());
 		tabPanel.selectTab(1);
+		about.setHTML(ChessConstants.INSTANCE.about());
 		RootPanel.get("uiRoot").add(binderPanel);
 		
 		// Parse the SVG chessboard and insert it in the HTML UI

@@ -40,6 +40,9 @@
 						</g:ScrollPanel>
 					</g:VerticalPanel>
 				</g:Tab>
+				<g:Tab>
+					<g:HTML ui:field="about"></g:HTML>
+				</g:Tab>
 			</g:TabPanel>
 		</g:HorizontalSplitPanel>
 	</g:DecoratorPanel>

@@ -32,6 +32,7 @@ public interface ChessConstants extends Constants {
 	
 	public String infoTab();
 	public String settingsTab();
+	public String aboutTab();
 
 	public String mode();
 	public String reflectionTime();
@@ -56,4 +57,6 @@ public interface ChessConstants extends Constants {
 	public String mt1m();
 	public String mt3m();
 	public String mt10m();
+	
+	public String about();
 }
