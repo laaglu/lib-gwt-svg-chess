@@ -228,7 +228,7 @@ public class Main implements EntryPoint, SearchObserver {
 		boardDiv = boardContainer.getElement().cast();
 		OMSVGDocument boardDoc = SVGParser.parse(Resources.INSTANCE.getBoard().getText());
 		Element boardElementTmp = boardDoc.getDocumentElement().cast();
-		boardElt = importNode(boardDiv.getOwnerDocument(), boardElementTmp, true).cast();
+		boardElt = SVGParser.importNode(boardDiv.getOwnerDocument(), boardElementTmp, true).cast();
 		boardDiv.appendChild((Element)boardElt.cast());
 
 		// Create the object to animate the SVG chessboard
@@ -316,13 +316,6 @@ public class Main implements EntryPoint, SearchObserver {
 		}
 	}
 
-	/**
-	 * Patch GWT Document.importNode, which fails to return the imported nodes
-	 */
-	public final native Node importNode(Document doc, Node node, boolean deep) /*-{
-		return doc.importNode(node, deep);
-	}-*/;
-	
 	/**
 	 * Refresh the non SVG elements of the UI (list of moves, current player, FEN) 
 	 */

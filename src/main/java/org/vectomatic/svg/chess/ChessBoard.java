@@ -32,6 +32,7 @@ import org.vectomatic.dom.svg.OMSVGPoint;
 import org.vectomatic.dom.svg.OMSVGRectElement;
 import org.vectomatic.dom.svg.OMSVGSVGElement;
 import org.vectomatic.dom.svg.OMSVGUseElement;
+import org.vectomatic.dom.svg.gwt.SVGConstants;
 
 import com.alonsoruibal.chess.Board;
 import com.alonsoruibal.chess.Move;
@@ -64,8 +65,6 @@ import com.google.gwt.user.client.Element;
  * @author Lukas Laag (laaglu@gmail.com)
  */
 public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHandler {
-	private static final String NS_SVG = "http://www.w3.org/2000/svg";
-	private static final String NS_XLINK = "http://www.w3.org/1999/xlink";
 
 	private ChessCss css;
 	private OMSVGSVGElement svgElt;
@@ -146,14 +145,14 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	public void addPiece(char piece, String algebraic) {
 		if (piece != '.') {
 			OMSVGElement squareElt = boardDoc.getElementById(algebraic).cast();
-			OMSVGUseElement useElt = boardDoc.createElementNS(NS_SVG, "use").cast();
+			OMSVGUseElement useElt = boardDoc.createElementNS(SVGConstants.SVG_NAMESPACE_URI, SVGConstants.SVG_USE_TAG).cast();
 			useElt.setId(algebraic + "_");
-			useElt.setAttribute("x", squareElt.getAttribute("x"));
-			useElt.setAttribute("y", squareElt.getAttribute("y"));
-			useElt.setAttribute("width", Integer.toString(sqWidth));
-			useElt.setAttribute("height", Integer.toString(sqHeight));
-			useElt.setAttributeNS(NS_XLINK, "xlink:href", "#" + Character.toString(piece));
-			useElt.setAttribute("cursor", "move");
+			useElt.setAttribute(SVGConstants.SVG_X_ATTRIBUTE, squareElt.getAttribute(SVGConstants.SVG_X_ATTRIBUTE));
+			useElt.setAttribute(SVGConstants.SVG_Y_ATTRIBUTE, squareElt.getAttribute(SVGConstants.SVG_Y_ATTRIBUTE));
+			useElt.setAttribute(SVGConstants.SVG_WIDTH_ATTRIBUTE, Integer.toString(sqWidth));
+			useElt.setAttribute(SVGConstants.SVG_HEIGHT_ATTRIBUTE, Integer.toString(sqHeight));
+			useElt.setAttributeNS(SVGConstants.XLINK_NAMESPACE_URI, "xlink:href", "#" + Character.toString(piece));
+			useElt.setAttribute(SVGConstants.CSS_CURSOR_PROPERTY, SVGConstants.CSS_MOVE_VALUE);
 			useElt.addMouseDownHandler(this);
 			useElt.addMouseMoveHandler(this);
 			useElt.addMouseUpHandler(this);
@@ -298,8 +297,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 					
 				});
 			} else {
-				targetPiece.setAttribute("x", Integer.toString(getX(srcIndex)));
-				targetPiece.setAttribute("y", Integer.toString(getY(srcIndex)));
+				targetPiece.setAttribute(SVGConstants.SVG_X_ATTRIBUTE, Integer.toString(getX(srcIndex)));
+				targetPiece.setAttribute(SVGConstants.SVG_Y_ATTRIBUTE, Integer.toString(getY(srcIndex)));
 			}
 			targetPiece = null;
 			update(false);
@@ -321,8 +320,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 			float r = svgElt.getCTM().getA();
 			int dx = (int)((event.getClientX() - x)/r);
 			int dy = (int)((event.getClientY() - y)/r);
-			targetPiece.setAttribute("x", Integer.toString(getX(srcIndex) + dx));
-			targetPiece.setAttribute("y", Integer.toString(getY(srcIndex) + dy));
+			targetPiece.setAttribute(SVGConstants.SVG_X_ATTRIBUTE, Integer.toString(getX(srcIndex) + dx));
+			targetPiece.setAttribute(SVGConstants.SVG_Y_ATTRIBUTE, Integer.toString(getY(srcIndex) + dy));
 			if (destIndex != index) {
 				destIndex = index;
 				update(false);
