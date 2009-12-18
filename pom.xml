@@ -7,7 +7,7 @@
 	<packaging>war</packaging>
 	<version>0.0.1</version>
 	<description>A chess game for web browsers. It uses the Carballo chess engine for chess computations and libgwtsvg for the SVG UI. These components are integrated using GWT.</description>
-	<url>http://www.vectomatic.org/libgwtsvg-chess</url>
+	<url>http://www.vectomatic.org/mvn-sites/libgwtsvg-chess</url>
 	<licenses>
 		<license>
 			<name>GPLv3</name>
