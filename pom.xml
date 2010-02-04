@@ -5,7 +5,7 @@
 	<artifactId>libgwtsvg-chess</artifactId>
 	<name>libgwtsvg-chess</name>
 	<packaging>war</packaging>
-	<version>0.0.1</version>
+	<version>0.2</version>
 	<description>A chess game for web browsers. It uses the Carballo chess engine for chess computations and libgwtsvg for the SVG UI. These components are integrated using GWT.</description>
 	<url>http://www.vectomatic.org/mvn-sites/libgwtsvg-chess</url>
 	<licenses>
@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>org.vectomatic</groupId>
 			<artifactId>libgwtsvg</artifactId>
-			<version>0.0.1</version>
+			<version>0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.alonsoruibal</groupId>

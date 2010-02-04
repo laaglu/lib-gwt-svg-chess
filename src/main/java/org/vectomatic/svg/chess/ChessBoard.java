@@ -23,16 +23,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.vectomatic.dom.OMDocument;
 import org.vectomatic.dom.svg.OMSVGAnimatedString;
-import org.vectomatic.dom.svg.OMSVGElement;
+import org.vectomatic.dom.svg.OMSVGDocument;
 import org.vectomatic.dom.svg.OMSVGGElement;
 import org.vectomatic.dom.svg.OMSVGMatrix;
 import org.vectomatic.dom.svg.OMSVGPoint;
 import org.vectomatic.dom.svg.OMSVGRectElement;
 import org.vectomatic.dom.svg.OMSVGSVGElement;
 import org.vectomatic.dom.svg.OMSVGUseElement;
-import org.vectomatic.dom.svg.gwt.SVGConstants;
 
 import com.alonsoruibal.chess.Board;
 import com.alonsoruibal.chess.Move;
@@ -40,7 +38,7 @@ import com.alonsoruibal.chess.bitboard.BitboardUtils;
 import com.alonsoruibal.chess.movegen.LegalMoveGenerator;
 import com.alonsoruibal.chess.movegen.MoveGenerator;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseEvent;
@@ -49,9 +47,7 @@ import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.DeferredCommand;
-import com.google.gwt.user.client.Element;
 
 /**
  * Class to update the SVG chess board
@@ -69,7 +65,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	private ChessCss css;
 	private OMSVGSVGElement svgElt;
 	private OMSVGGElement boardElt;
-	private OMDocument boardDoc;
+	private OMSVGDocument boardDoc;
 	private OMSVGUseElement targetPiece;
 	private int sqWidth;
 	private int sqHeight;
@@ -101,28 +97,47 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	/**
 	 * Coordinates of the mousedown origin point
 	 */
-	private int x, y;
+	private OMSVGPoint mouseDownCoords;
 	/**
 	 * Current UI mode: select either source or dest index
 	 */
 	private BoardMode mode;
-	
+	/**
+	 * Maps algebraic coordinates to board squares
+	 */
+	private Map<String, OMSVGRectElement> algebraicToRects;
+	/**
+	 * Maps algebraic coordinates to chess pieces
+	 */
+	private Map<String, OMSVGUseElement> algebraicToPieces;
+
 	private Main main;
 	
 	public ChessBoard(Board board, OMSVGSVGElement svgElt, Main main) {
 		this.board = board;
 		this.svgElt = svgElt;
 		this.main = main;
-		this.boardDoc = svgElt.getOwnerDocument().cast();
-		this.boardElt = boardDoc.getElementById("board").cast();
+		this.boardDoc = svgElt.getOwnerDocument();
+		this.boardElt = (OMSVGGElement) boardDoc.getElementById("board");
 		this.css = Resources.INSTANCE.getCss();
 		this.srcToDestIndex = new HashMap<Integer, Set<Integer>>();
 		this.mode = BoardMode.SRC_MODE;
 		this.srcIndex = -1;
 		this.destIndex = -1;
-		OMSVGRectElement sqElement = boardDoc.getElementById("a1").cast();
-		this.sqWidth = Integer.parseInt(sqElement.getAttribute("width"));
-		this.sqHeight = Integer.parseInt(sqElement.getAttribute("height"));
+		this.algebraicToRects = new HashMap<String, OMSVGRectElement>();
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				int index = j + 8 * i;
+				
+				String squareId = BitboardUtils.index2Algebraic(index);
+				OMSVGRectElement squareElt = (OMSVGRectElement) boardDoc.getElementById(squareId);
+				algebraicToRects.put(squareId, squareElt);
+			}
+		}
+		OMSVGRectElement sqElement = algebraicToRects.get("a1");
+		this.sqWidth = (int)sqElement.getWidth().getBaseVal().getValue();
+		this.sqHeight = (int)sqElement.getHeight().getBaseVal().getValue();
+		this.algebraicToPieces = new HashMap<String, OMSVGUseElement>(); 
 
 		// Legal moves logic
 		legalMoveGenerator = new LegalMoveGenerator();
@@ -144,19 +159,18 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	 */
 	public void addPiece(char piece, String algebraic) {
 		if (piece != '.') {
-			OMSVGElement squareElt = boardDoc.getElementById(algebraic).cast();
-			OMSVGUseElement useElt = boardDoc.createElementNS(SVGConstants.SVG_NAMESPACE_URI, SVGConstants.SVG_USE_TAG).cast();
-			useElt.setId(algebraic + "_");
-			useElt.setAttribute(SVGConstants.SVG_X_ATTRIBUTE, squareElt.getAttribute(SVGConstants.SVG_X_ATTRIBUTE));
-			useElt.setAttribute(SVGConstants.SVG_Y_ATTRIBUTE, squareElt.getAttribute(SVGConstants.SVG_Y_ATTRIBUTE));
-			useElt.setAttribute(SVGConstants.SVG_WIDTH_ATTRIBUTE, Integer.toString(sqWidth));
-			useElt.setAttribute(SVGConstants.SVG_HEIGHT_ATTRIBUTE, Integer.toString(sqHeight));
-			useElt.setAttributeNS(SVGConstants.XLINK_NAMESPACE_URI, "xlink:href", "#" + Character.toString(piece));
-			useElt.setAttribute(SVGConstants.CSS_CURSOR_PROPERTY, SVGConstants.CSS_MOVE_VALUE);
+			OMSVGRectElement squareElt = (OMSVGRectElement) boardDoc.getElementById(algebraic);
+			OMSVGUseElement useElt = boardDoc.createSVGUseElement();
+			useElt.getX().getBaseVal().setValue(squareElt.getX().getBaseVal().getValue());
+			useElt.getY().getBaseVal().setValue(squareElt.getY().getBaseVal().getValue());
+			useElt.getWidth().getBaseVal().setValue(sqWidth);
+			useElt.getHeight().getBaseVal().setValue(sqHeight);
+			useElt.getHref().setBaseVal("#" + Character.toString(piece));
+			useElt.getStyle().setCursor(Cursor.MOVE);
 			useElt.addMouseDownHandler(this);
-			useElt.addMouseMoveHandler(this);
 			useElt.addMouseUpHandler(this);
 			boardElt.appendChild(useElt);
+			algebraicToPieces.put(algebraic, useElt);
 		}
 	}
 	
@@ -166,7 +180,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	 * The position
 	 */
 	public void removePiece(String algebraic) {
-		OMSVGUseElement useElt = boardDoc.getElementById(algebraic + "_").cast();
+		OMSVGUseElement useElt = algebraicToPieces.remove(algebraic);
 		if (useElt != null) {
 			boardElt.removeChild(useElt);
 		}
@@ -179,13 +193,13 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	 * @return
 	 */
 	public char getPiece(String algebraic) {
-		OMSVGUseElement useElt = boardDoc.getElementById(algebraic + "_").cast();
+		OMSVGUseElement useElt = algebraicToPieces.get(algebraic);
 		if (useElt != null) {
 			OMSVGAnimatedString href = useElt.getHref();
 			if (href != null) {
-				String animVal = href.getAnimVal();
-				if (animVal != null) {
-					return animVal.charAt(1);
+				String baseVal = href.getBaseVal();
+				if (baseVal != null) {
+					return baseVal.charAt(1);
 				}
 			}
 		}
@@ -222,7 +236,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				int index = j + 8 * i;
 				
 				String squareId = BitboardUtils.index2Algebraic(index);
-				OMSVGElement squareElt = boardDoc.getElementById(squareId).cast();
+				OMSVGRectElement squareElt = algebraicToRects.get(squareId);
 				
 				// Change the colors of the squares to highlight possible moves
 				String className = ((j + i ) % 2) == 0 ? css.whiteSquare() : css.blackSquare();
@@ -235,8 +249,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				if (index == srcIndex) {
 					className = css.yellowSquare();
 				}
-				if (!className.equals(squareElt.getAttribute("class"))) {
-					squareElt.setAttribute("class", className);
+				if (!className.equals(squareElt.getClassName().getBaseVal())) {
+					squareElt.setClassNameBaseVal(className);
 					//GWT.log("Setting: " + className, null);
 				}
 
@@ -249,29 +263,15 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 			}
 		}
 	}
-	
-	/**
-	 * Firefox does not correctly implement the SVG event model
-	 * for SVGUseElement. Indeed, event targets ought to be
-	 * wrapped in a SVGElementInstance, which is not the case.
-	 * Other browsers (WebKit based Chrome and Safari) and Opera
-	 * do it correctly. This method unwraps the SVGElementInstance
-	 */
-	public final native OMSVGUseElement unwrap(JavaScriptObject obj) /*-{
-		return ("correspondingUseElement" in obj) ? obj.correspondingUseElement : obj;
-	}-*/;
 
 	@Override
 	public void onMouseDown(MouseDownEvent event) {
 //		GWT.log("onMouseDown(" + toString(event) + "))", null);
-		JavaScriptObject target = event.getNativeEvent().getEventTarget();
-		targetPiece = unwrap(target);
-		this.destIndex = BitboardUtils.algebraic2Index(getIndex(targetPiece));
+		String algebraic = getAlgebraic(event);
+		targetPiece = algebraicToPieces.get(algebraic);
+		this.destIndex = BitboardUtils.algebraic2Index(algebraic);
 		mode = BoardMode.DEST_MODE;
-		x = event.getClientX();
-		y = event.getClientY();
-		update(false);
-		DOM.setCapture((Element)event.getNativeEvent().getEventTarget().cast());
+		mouseDownCoords = getLocalCoordinates(event);
 		update(false);
 	}
 
@@ -280,8 +280,6 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 //		GWT.log("onMouseUp(" + toString(event) + "))", null);
 
 		if (targetPiece != null) {
-			JavaScriptObject target = event.getNativeEvent().getEventTarget();
-			DOM.releaseCapture((Element)target.cast());
 			mode = BoardMode.SRC_MODE;
 			Set<Integer> destIndices = srcToDestIndex.containsKey(srcIndex) ? srcToDestIndex.get(srcIndex) : Collections.<Integer>emptySet();
 			if (destIndices.contains(destIndex)) {
@@ -297,8 +295,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 					
 				});
 			} else {
-				targetPiece.setAttribute(SVGConstants.SVG_X_ATTRIBUTE, Integer.toString(getX(srcIndex)));
-				targetPiece.setAttribute(SVGConstants.SVG_Y_ATTRIBUTE, Integer.toString(getY(srcIndex)));
+				targetPiece.getX().getBaseVal().setValue(getX(srcIndex));
+				targetPiece.getY().getBaseVal().setValue(getY(srcIndex));
 			}
 			targetPiece = null;
 			update(false);
@@ -316,17 +314,22 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				update(false);
 			}
 		} else {
-			// Compensate viewbox/viewport transform.
-			float r = svgElt.getCTM().getA();
-			int dx = (int)((event.getClientX() - x)/r);
-			int dy = (int)((event.getClientY() - y)/r);
-			targetPiece.setAttribute(SVGConstants.SVG_X_ATTRIBUTE, Integer.toString(getX(srcIndex) + dx));
-			targetPiece.setAttribute(SVGConstants.SVG_Y_ATTRIBUTE, Integer.toString(getY(srcIndex) + dy));
+			// Compute the delta from the mousedown point.
+			OMSVGPoint p = getLocalCoordinates(event);
+			targetPiece.getX().getBaseVal().setValue(getX(srcIndex) + p.getX() - mouseDownCoords.getX());
+			targetPiece.getY().getBaseVal().setValue(getY(srcIndex) + p.getY() - mouseDownCoords.getY());
 			if (destIndex != index) {
 				destIndex = index;
 				update(false);
 			}
 		}
+		event.stopPropagation();
+	}
+	
+	public OMSVGPoint getLocalCoordinates(MouseEvent e) {
+		OMSVGPoint p = svgElt.createSVGPoint(e.getClientX(), e.getClientY());
+		OMSVGMatrix m = boardElt.getScreenCTM().inverse();
+		return p.matrixTransform(m);
 	}
 
 	public int getX(int index) {
@@ -334,11 +337,6 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	}
 	public int getY(int index) {
 		return sqHeight * (7 - (index / 8));
-	}
-
-	private String getIndex(OMSVGElement elt) {
-		String id = elt.getId();
-		return id.replace("_", "");
 	}
 
 	/**
@@ -350,20 +348,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	 * The algebraic corresponding to a mouse event
 	 */
 	public String getAlgebraic(MouseEvent event) {
-		
-		// Compensate viewbox/viewport transform.
-		// The viewbox/viewport transform is equivalent to a scale
-		// The root <g> element also has a transform of its own
-		float r = svgElt.getCTM().getA();
-		OMSVGMatrix m1 = svgElt.createSVGMatrix();
-		m1 = m1.scale(1 / r);
-		OMSVGMatrix m2 = svgElt.getTransformToElement(boardElt);
-		OMSVGMatrix m = m2.multiply(m1);
-		OMSVGPoint p = svgElt.createSVGPoint();
-		p.setX(event.getRelativeX((Element)svgElt.cast()));
-		p.setY(event.getRelativeY((Element)svgElt.cast()));
-		p = p.matrixTransform(m);
 
+		OMSVGPoint p = getLocalCoordinates(event);
 		int x = (int)(p.getX() / sqWidth);
 		int y = (int)(p.getY() / sqHeight);
 		if (x >= 0 && x <= 7 && y >= 0 && y <= 7) {
@@ -375,59 +361,41 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		return null;
 	}
 
-	public String toString(MouseEvent e) {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(" e=");
-		buffer.append(e.getRelativeElement());
-		buffer.append(" t=");
-		buffer.append(e.getNativeEvent().getEventTarget());
-		buffer.append(" cet=");
-		buffer.append(e.getNativeEvent().getCurrentEventTarget());
-		buffer.append(" ret=");
-		buffer.append(e.getNativeEvent().getRelatedEventTarget());
-		buffer.append(" cx=");
-		buffer.append(e.getClientX());
-		buffer.append(" cy=");
-		buffer.append(e.getClientY());
-		buffer.append(" rx=");
-		buffer.append(e.getRelativeX((Element)svgElt.cast()));
-		buffer.append(" ry=");
-		buffer.append(e.getRelativeY((Element)svgElt.cast()));
-		buffer.append(" x=");
-		buffer.append(e.getX());
-		buffer.append(" y=");
-		buffer.append(e.getY());
-		buffer.append(" sx=");
-		buffer.append(e.getScreenX());
-		buffer.append(" sy=");
-		buffer.append(e.getScreenY());
-		return buffer.toString();
-	}
-	public String toString(OMSVGMatrix m) {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("[");
-		buffer.append(m.getA());
-		buffer.append(" ");
-		buffer.append(m.getB());
-		buffer.append(" ");
-		buffer.append(m.getC());
-		buffer.append(" ");
-		buffer.append(m.getD());
-		buffer.append(" ");
-		buffer.append(m.getE());
-		buffer.append(" ");
-		buffer.append(m.getF());
-		buffer.append("]");
-		return buffer.toString();
-	}
-	public String toString(OMSVGPoint p) {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("(");
-		buffer.append(p.getX());
-		buffer.append(",");
-		buffer.append(p.getY());
-		buffer.append(")");
-		return buffer.toString();
-	}
+//	public String toString(MouseEvent e) {
+//		String width = svgElt.getStyle().getWidth();
+//		float r = (Integer.parseInt(width.substring(0, width.length() - 2 /* 2 == "px".length() */))) / svgElt.getBBox().getWidth();
+//		StringBuffer buffer = new StringBuffer();
+//		buffer.append(" e=");
+//		buffer.append(e.getRelativeElement());
+//		buffer.append(" t=");
+//		buffer.append(e.getNativeEvent().getEventTarget());
+//		buffer.append(" cet=");
+//		buffer.append(e.getNativeEvent().getCurrentEventTarget());
+//		buffer.append(" cx=");
+//		buffer.append(e.getClientX());
+//		buffer.append(" cy=");
+//		buffer.append(e.getClientY());
+//		buffer.append(" scx=");
+//		buffer.append((int)((e.getClientX())/ r));
+//		buffer.append(" scy=");
+//		buffer.append((int)((e.getClientY()) / r));
+//		buffer.append(" rx=");
+//		buffer.append(e.getRelativeX(svgElt.getElement()));
+//		buffer.append(" ry=");
+//		buffer.append(e.getRelativeY(svgElt.getElement()));
+//		buffer.append(" x=");
+//		buffer.append(e.getX());
+//		buffer.append(" y=");
+//		buffer.append(e.getY());
+//		buffer.append(" sx=");
+//		buffer.append(e.getScreenX());
+//		buffer.append(" sy=");
+//		buffer.append(e.getScreenY());
+//		return buffer.toString();
+//	}
+//	private void log(String s) {
+//		Text t = (Text) DOM.getElementById("title").getFirstChild();
+//		t.setData(s);
+//	}
 }
 

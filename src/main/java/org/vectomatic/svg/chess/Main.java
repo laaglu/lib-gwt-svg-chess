@@ -17,10 +17,8 @@
  **********************************************/
 package org.vectomatic.svg.chess;
 
-import org.vectomatic.dom.svg.OMSVGDocument;
-import org.vectomatic.dom.svg.OMSVGElement;
 import org.vectomatic.dom.svg.OMSVGSVGElement;
-import org.vectomatic.dom.svg.gwt.SVGParser;
+import org.vectomatic.dom.svg.utils.OMSVGParser;
 
 import com.alonsoruibal.chess.Move;
 import com.alonsoruibal.chess.StaticConfig;
@@ -31,9 +29,6 @@ import com.alonsoruibal.chess.search.SearchObserver;
 import com.alonsoruibal.chess.search.SearchStatusInfo;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -134,11 +129,11 @@ public class Main implements EntryPoint, SearchObserver {
 	/**
 	 * A &lt;div&gt; element to contain the SVG root element
 	 */
-	private DivElement boardDiv;
+	private Element boardDiv;
 	/**
 	 * The root SVG element
 	 */
-	private OMSVGElement boardElt;
+	private OMSVGSVGElement boardElt;
 	/**
 	 * Array of preset Carballo move times in ms 
 	 */
@@ -225,14 +220,12 @@ public class Main implements EntryPoint, SearchObserver {
 		
 		// Parse the SVG chessboard and insert it in the HTML UI
 		// Note that the elements must be imported in the UI since they come from another XML document
-		boardDiv = boardContainer.getElement().cast();
-		OMSVGDocument boardDoc = SVGParser.parse(Resources.INSTANCE.getBoard().getText());
-		Element boardElementTmp = boardDoc.getDocumentElement().cast();
-		boardElt = SVGParser.importNode(boardDiv.getOwnerDocument(), boardElementTmp, true).cast();
-		boardDiv.appendChild((Element)boardElt.cast());
+		boardDiv = boardContainer.getElement();
+		boardElt = OMSVGParser.parse(Resources.INSTANCE.getBoard().getText());
+		boardDiv.appendChild(boardElt.getElement());
 
 		// Create the object to animate the SVG chessboard
-		board = new ChessBoard(engine.getBoard(), (OMSVGSVGElement)boardElt.cast(), this);
+		board = new ChessBoard(engine.getBoard(), boardElt, this);
 
 		// Handle resizing issues.
 		ResizeHandler resizeHandler = new ResizeHandler() {
@@ -307,8 +300,8 @@ public class Main implements EntryPoint, SearchObserver {
 					int size = Math.min(width, height);
 					boardDiv.getStyle().setWidth(size, Style.Unit.PX);
 					boardDiv.getStyle().setHeight(size, Style.Unit.PX);
-					boardElt.setAttribute("width", size + Style.Unit.PX.name().toLowerCase());
-					boardElt.setAttribute("height", size + Style.Unit.PX.name().toLowerCase());
+					boardElt.getStyle().setWidth(size, Style.Unit.PX);
+					boardElt.getStyle().setHeight(size, Style.Unit.PX);
 				} catch(NumberFormatException e) {
 					GWT.log("Incorrect width: " + rawWidth, e);
 				}
