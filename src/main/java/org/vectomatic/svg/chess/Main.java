@@ -33,8 +33,6 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.MouseMoveEvent;
-import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -53,11 +51,9 @@ import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HorizontalSplitPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.SplitPanelHelper;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.widgetideas.client.HSliderBar;
@@ -79,14 +75,12 @@ public class Main implements EntryPoint, SearchObserver {
 	ChessCss style = Resources.INSTANCE.getCss();
 
 	@UiField
-	HorizontalSplitPanel splitPanel;
-	@UiField
 	HTML boardContainer;
 	@UiField
 	Button restartButton;
 	@UiField
 	Button fenButton;
-	
+
 	@UiField
 	TabPanel tabPanel;
 	@UiField
@@ -211,10 +205,11 @@ public class Main implements EntryPoint, SearchObserver {
 		modeListBox.addItem(ChessMode.computerVsComputer.getDescription(), ChessMode.computerVsComputer.name());
 		modeListBox.setSelectedIndex(0);
 		
-		tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.settingsTab());
+		tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.boardTab());
 		tabPanel.getTabBar().setTabText(1, ChessConstants.INSTANCE.infoTab());
-		tabPanel.getTabBar().setTabText(2, ChessConstants.INSTANCE.aboutTab());
-		tabPanel.selectTab(1);
+		tabPanel.getTabBar().setTabText(2, ChessConstants.INSTANCE.settingsTab());
+		tabPanel.getTabBar().setTabText(3, ChessConstants.INSTANCE.aboutTab());
+		tabPanel.selectTab(0);
 		about.setHTML(ChessConstants.INSTANCE.about());
 		RootPanel.get("uiRoot").add(binderPanel);
 		
@@ -231,24 +226,18 @@ public class Main implements EntryPoint, SearchObserver {
 		ResizeHandler resizeHandler = new ResizeHandler() {
 			@Override
 			public void onResize(ResizeEvent event) {
-				String width = (Window.getClientWidth() - 20) + "px";
-				String height = getHeight() + "px";
-				splitPanel.setSize(width, height);
-				updateSplitPanel();
+				int width = Window.getClientWidth() - 20;
+				int height = getHeight();
+		
+				int size = Math.min(width, height);
+				boardDiv.getStyle().setWidth(size, Style.Unit.PX);
+				boardDiv.getStyle().setHeight(size, Style.Unit.PX);
+				boardElt.getStyle().setWidth(size, Style.Unit.PX);
+				boardElt.getStyle().setHeight(size, Style.Unit.PX);
 			}
 		};
 		Window.addResizeHandler(resizeHandler);
 		resizeHandler.onResize(null);
-		// Hack the HorizontalSplitPanel to generate an event when
-		// the splitter element is moved
-		SplitPanelHelper.addHandler(splitPanel, new MouseMoveHandler() {
-			@Override
-			public void onMouseMove(MouseMoveEvent event) {
-				if (splitPanel.isResizing()) {
-					updateSplitPanel();
-				}
-			}
-		}, MouseMoveEvent.getType());
 		
 		// Add undo-redo support through the browser back/forward buttons
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -280,33 +269,6 @@ public class Main implements EntryPoint, SearchObserver {
 		} catch (NumberFormatException e) {
 		}
 		return moveNumber;
-	}
-	
-	/**
-	 * Method invoked when the HorizontalSplitPanel splitter is moved.
-	 * Resizes the SVG chessboard.
-	 */
-	private void updateSplitPanel() {
-		Style style = SplitPanelHelper.getStyle(splitPanel);
-		String rawWidth = style.getWidth();
-		GWT.log("Main.updateSplitPanel(" + rawWidth + ")", null);
-		if (rawWidth != null && rawWidth.length() > 0) {
-			// Process events with size in pixels only
-			int index = rawWidth.indexOf(Style.Unit.PX.name().toLowerCase());
-			if (index != -1) {
-				try {
-					int width = Integer.valueOf(rawWidth.substring(0, index));
-					int height = getHeight();
-					int size = Math.min(width, height);
-					boardDiv.getStyle().setWidth(size, Style.Unit.PX);
-					boardDiv.getStyle().setHeight(size, Style.Unit.PX);
-					boardElt.getStyle().setWidth(size, Style.Unit.PX);
-					boardElt.getStyle().setHeight(size, Style.Unit.PX);
-				} catch(NumberFormatException e) {
-					GWT.log("Incorrect width: " + rawWidth, e);
-				}
-			}
-		}
 	}
 
 	/**
@@ -451,5 +413,4 @@ public class Main implements EntryPoint, SearchObserver {
         confirmBox.center();
         confirmBox.show();
     }
-	
 }

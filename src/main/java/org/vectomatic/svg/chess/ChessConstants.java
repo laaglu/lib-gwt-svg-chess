@@ -30,6 +30,7 @@ public interface ChessConstants extends Constants {
 	public String white();
 	public String black();
 	
+	public String boardTab();
 	public String infoTab();
 	public String settingsTab();
 	public String aboutTab();
@@ -40,7 +41,7 @@ public interface ChessConstants extends Constants {
 	public String history();
 	public String fen();
 	public String advanced();
-
+	
 	public String restart();
 	public String setFen();
 
