@@ -267,12 +267,25 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	@Override
 	public void onMouseDown(MouseDownEvent event) {
 //		GWT.log("onMouseDown(" + toString(event) + "))", null);
+		onMouseDown_(event);
+	}
+	
+	private void onMouseDown_(MouseEvent event) {
 		String algebraic = getAlgebraic(event);
-		targetPiece = algebraicToPieces.get(algebraic);
-		this.destIndex = BitboardUtils.algebraic2Index(algebraic);
-		mode = BoardMode.DEST_MODE;
-		mouseDownCoords = getLocalCoordinates(event);
-		update(false);
+		if (targetPiece == null) {
+			targetPiece = algebraicToPieces.get(algebraic);
+			if (targetPiece != null) {
+				this.destIndex = BitboardUtils.algebraic2Index(algebraic);
+				mode = BoardMode.DEST_MODE;
+				mouseDownCoords = getLocalCoordinates(event);
+				update(false);
+			}
+		} else {
+			int index = algebraic != null ? BitboardUtils.algebraic2Index(algebraic) : -1;
+			if (index == srcIndex) {
+				targetPiece = null;
+			}
+		}
 	}
 
 	@Override
@@ -294,12 +307,15 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 					}
 					
 				});
+				event.stopPropagation();
 			} else {
 				targetPiece.getX().getBaseVal().setValue(getX(srcIndex));
 				targetPiece.getY().getBaseVal().setValue(getY(srcIndex));
 			}
 			targetPiece = null;
 			update(false);
+		} else {
+			onMouseDown_(event);
 		}
 	}
 
@@ -360,7 +376,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		}
 		return null;
 	}
-
+//
 //	public String toString(MouseEvent e) {
 //		String width = svgElt.getStyle().getWidth();
 //		float r = (Integer.parseInt(width.substring(0, width.length() - 2 /* 2 == "px".length() */))) / svgElt.getBBox().getWidth();
@@ -398,4 +414,3 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 //		t.setData(s);
 //	}
 }
-
