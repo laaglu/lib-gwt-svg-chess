@@ -42,6 +42,8 @@ public interface ChessConstants extends Constants {
 	public String fen();
 	public String advanced();
 	
+	public String undo();
+	public String redo();
 	public String restart();
 	public String setFen();
 

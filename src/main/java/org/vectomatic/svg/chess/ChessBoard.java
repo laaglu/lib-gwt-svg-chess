@@ -299,7 +299,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				final int move = Move.getFromString(board, BitboardUtils.index2Algebraic(srcIndex) + BitboardUtils.index2Algebraic(destIndex));
 				board.doMove(move);
 				GWT.log("newItem(" + board.getMoveNumber() +  ")", null);
-				main.addUndoableMove();
+				main.addMove();
 				DeferredCommand.addCommand(new Command() {
 					@Override
 					public void execute() {

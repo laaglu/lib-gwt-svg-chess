@@ -17,6 +17,10 @@
 					<g:ScrollPanel alwaysShowScrollBars="true" height="400px">
 						<g:TextArea ui:field='historyArea' width="100%"/>
 					</g:ScrollPanel>
+					<g:HorizontalPanel>
+						<g:Button ui:field='undoButton' text="{constants.undo}" />
+						<g:Button ui:field='redoButton' text="{constants.redo}" />
+					</g:HorizontalPanel>
 				</g:VerticalPanel>
 			</g:Tab>
 			<g:Tab>

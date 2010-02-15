@@ -20,6 +20,7 @@ package org.vectomatic.svg.chess;
 import org.vectomatic.dom.svg.OMSVGSVGElement;
 import org.vectomatic.dom.svg.utils.OMSVGParser;
 
+import com.alonsoruibal.chess.Board;
 import com.alonsoruibal.chess.Move;
 import com.alonsoruibal.chess.StaticConfig;
 import com.alonsoruibal.chess.bitboard.JSONAttackGenerator;
@@ -35,8 +36,6 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
@@ -44,7 +43,6 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Element;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DecoratorPanel;
@@ -80,6 +78,10 @@ public class Main implements EntryPoint, SearchObserver {
 	Button restartButton;
 	@UiField
 	Button fenButton;
+	@UiField
+	Button undoButton;
+	@UiField
+	Button redoButton;
 
 	@UiField
 	TabPanel tabPanel;
@@ -113,13 +115,17 @@ public class Main implements EntryPoint, SearchObserver {
 	DialogBox confirmBox;
 
 	/**
-	 * The Carballo chess engine
+	 * The Carballo engine
 	 */
-	private SearchEngine engine;
+	SearchEngine engine;
+	/**
+	 * The Carballo board
+	 */
+	Board board;
 	/**
 	 * The SVG chess board
 	 */
-	private ChessBoard board;
+	ChessBoard chessboard;
 	/**
 	 * A &lt;div&gt; element to contain the SVG root element
 	 */
@@ -137,13 +143,17 @@ public class Main implements EntryPoint, SearchObserver {
 	 */
 	private int moveTimeIndex;
 	/**
-	 * True if the handler for the browser back/forward button is activated, false otherwise
+	 * To handle integration of undo/redo with the browser back/forward button, if supported
 	 */
-	private boolean undoActivated;
+	private HistoryManager historyManager;
 	/**
-	 * Number of items in the browser undo stack
+	 * Last move number
 	 */
-	private int undoableMoveCount;
+	int lastMoveNumber;
+	/**
+	 * First move number
+	 */
+	int firstMoveNumber;
 
 	/**
 	 * UiBinder factory method to instantiate HSliderBar 
@@ -192,6 +202,7 @@ public class Main implements EntryPoint, SearchObserver {
 		// Create a Carballo chess engine
 		engine = new SearchEngine(new StaticConfig(), new JSONBook(), new JSONAttackGenerator());
 		engine.setObserver(this);
+		board = engine.getBoard();
 		moveTimeIndex = 0;
 
 		// Instantiate UI
@@ -220,7 +231,7 @@ public class Main implements EntryPoint, SearchObserver {
 		boardDiv.appendChild(boardElt.getElement());
 
 		// Create the object to animate the SVG chessboard
-		board = new ChessBoard(engine.getBoard(), boardElt, this);
+		chessboard = new ChessBoard(board, boardElt, this);
 
 		// Handle resizing issues.
 		ResizeHandler resizeHandler = new ResizeHandler() {
@@ -240,35 +251,10 @@ public class Main implements EntryPoint, SearchObserver {
 		resizeHandler.onResize(null);
 		
 		// Add undo-redo support through the browser back/forward buttons
-		History.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				GWT.log("Main.undo(" + getCurrentToken() + ", " + undoActivated + ")", null);
-				if (undoActivated) {
-					engine.getBoard().undoMove(getCurrentToken());
-					board.update(false);
-					updateUI();
-					nextMove();
-				}
-			}
-		});
-		undoActivated = true;
+		historyManager = GWT.create(HistoryManager.class);
+		historyManager.initialize(this);
+		
 		restart();
-	}
-	
-	/**
-	 * Return the carballo index of the current move as
-	 * parsed from the browser undo/redo stack
-	 * @return
-	 */
-	private int getCurrentToken() {
-		int moveNumber = -1;
-		try {
-			String token = History.getToken();
-			moveNumber = Integer.parseInt(token);
-		} catch (NumberFormatException e) {
-		}
-		return moveNumber;
 	}
 
 	/**
@@ -276,9 +262,9 @@ public class Main implements EntryPoint, SearchObserver {
 	 */
 	private void updateUI() {
 		StringBuffer buffer = new StringBuffer();
-		int[] moves = engine.getBoard().getMoveHistory();
-		int count = engine.getBoard().getMoveNumber();
-		for (int i = 0; i < count; i++) {
+		int[] moves = board.getMoveHistory();
+		int count = board.getMoveNumber();
+		for (int i = firstMoveNumber; i < count; i++) {
 			String move = Move.toStringExt(moves[i]);
 			if (i > 0) {
 				buffer.append("\n");
@@ -287,8 +273,41 @@ public class Main implements EntryPoint, SearchObserver {
 		}
 		historyArea.setVisibleLines(count);
 		historyArea.setText(buffer.toString());
-		fenArea.setText(engine.getBoard().getFen());
-		currentPlayerValueLabel.setText(engine.getBoard().getTurn() ? ChessConstants.INSTANCE.white() : ChessConstants.INSTANCE.black());
+		fenArea.setText(board.getFen());
+		currentPlayerValueLabel.setText(board.getTurn() ? ChessConstants.INSTANCE.white() : ChessConstants.INSTANCE.black());
+		int moveNumber = board.getMoveNumber();
+		
+		int firstPossibleMove = firstMoveNumber;
+		int lastPossibleMove = lastMoveNumber;
+		switch(getMode()) {
+			case whitesVsBlacks:
+				break;
+			case whitesVsComputer:
+				if (firstMoveNumber % 2 == 1) {
+					firstPossibleMove++;
+				}
+				if (lastPossibleMove % 2 == 1) {
+					lastPossibleMove--;
+				}
+				break;
+			case blacksVsComputer:
+				if (firstMoveNumber % 2 == 0) {
+					firstPossibleMove++;
+				}
+				if (lastPossibleMove % 2 == 0) {
+					lastPossibleMove--;
+				}
+				break;
+			case computerVsComputer:
+				firstPossibleMove = Integer.MAX_VALUE;
+				lastPossibleMove = Integer.MIN_VALUE;
+				break;
+		}
+		undoButton.setEnabled(moveNumber > firstPossibleMove);
+		redoButton.setEnabled(moveNumber < lastPossibleMove);
+	}
+	ChessMode getMode() {
+		return ChessMode.valueOf(modeListBox.getValue(modeListBox.getSelectedIndex()));
 	}
 	
 	/**
@@ -296,7 +315,7 @@ public class Main implements EntryPoint, SearchObserver {
 	 */
 	public void nextMove() {
 		updateUI();
-		switch (engine.getBoard().isEndGame()) {
+		switch (board.isEndGame()) {
 			case 1 :
 				Window.alert(ChessConstants.INSTANCE.whitesWin());
 				restart();
@@ -310,17 +329,16 @@ public class Main implements EntryPoint, SearchObserver {
 				restart();
 				break;
 			default:
-				ChessMode mode = ChessMode.valueOf(modeListBox.getValue(modeListBox.getSelectedIndex()));
-				switch(mode) {
+				switch(getMode()) {
 					case whitesVsBlacks:
 						break;
 					case whitesVsComputer:
-						if (!engine.getBoard().getTurn()) {
+						if (!board.getTurn()) {
 							computerMove();
 						}
 						break;
 					case blacksVsComputer:
-						if (engine.getBoard().getTurn()) {
+						if (board.getTurn()) {
 							computerMove();
 						}
 						break;
@@ -350,8 +368,9 @@ public class Main implements EntryPoint, SearchObserver {
 	 */
 	public void bestMove(int bestMove, int ponder) {
 		GWT.log("Main.bestMove(" + Move.toStringExt(bestMove) + ", " + Move.toStringExt(ponder) + ")", null);
-		engine.getBoard().doMove(bestMove);
-		board.update(false);
+		board.doMove(bestMove);
+		addMove();
+		chessboard.update(false);
 		nextMove();
 	}
 
@@ -363,41 +382,25 @@ public class Main implements EntryPoint, SearchObserver {
 	}
 	
 	/**
-	 * Add an event to the browser undo/redo stack
-	 */
-	public void addUndoableMove() {
-		History.newItem(Integer.toString(engine.getBoard().getMoveNumber()), false);
-		undoableMoveCount++;
-	}
-
-	/**
 	 * Start a new game
 	 */
 	public void restart() {
-		undoActivated = false;
-		for (int i = 0; i < undoableMoveCount; i++) {
-			History.back();
-		}
-		undoActivated = true;
-		undoableMoveCount = 0;
-		engine.getBoard().startPosition();
-		board.update(false);
-		addUndoableMove();
+		chessboard.update(true);
+		lastMoveNumber = 0;
+		historyManager.setMove(0);
+		board.startPosition();
+		firstMoveNumber = board.getMoveNumber();
+		chessboard.update(true);
 		nextMove();
 	}
 	
 	@UiHandler("fenButton")
 	public void updateFen(ClickEvent event) {
 		GWT.log("Main.updateFen(" + fenArea.getText() + ")", null);
-		undoActivated = false;
-		for (int i = 0; i < undoableMoveCount; i++) {
-			History.back();
-		}
-		undoActivated = true;
-		undoableMoveCount = 0;
-		engine.getBoard().setFen(fenArea.getText());
-		board.update(true);
-		addUndoableMove();
+		historyManager.setMove(0);
+		board.setFen(fenArea.getText());
+		lastMoveNumber = firstMoveNumber = board.getMoveNumber();
+		chessboard.update(true);
 		nextMove();
 	}
 
@@ -413,4 +416,54 @@ public class Main implements EntryPoint, SearchObserver {
         confirmBox.center();
         confirmBox.show();
     }
+
+	@UiHandler("undoButton")
+	public void undo(ClickEvent event) {
+		GWT.log("Main.undo()", null);
+		int moveNumber = board.getMoveNumber();
+		switch(getMode()) {
+			case whitesVsBlacks:
+				setMove(moveNumber - 1);
+				break;
+			case whitesVsComputer:
+			case blacksVsComputer:
+				setMove(moveNumber - 2);
+				break;
+			case computerVsComputer:
+				break;
+		}
+		nextMove();
+   }
+
+	@UiHandler("redoButton")
+	public void redo(ClickEvent event) {
+		GWT.log("Main.redo()", null);
+		int moveNumber = board.getMoveNumber();
+		switch(getMode()) {
+			case whitesVsBlacks:
+				setMove(moveNumber + 1);
+				break;
+			case whitesVsComputer:
+			case blacksVsComputer:
+				setMove(moveNumber + 2);
+				break;
+			case computerVsComputer:
+				break;
+		}
+		nextMove();
+    }
+	
+	/**
+	 * Add an event to the browser undo/redo stack
+	 */
+	public void addMove() {
+		historyManager.addMove();
+		lastMoveNumber = board.getMoveNumber();
+	}
+
+	private void setMove(int moveNumber) {
+		historyManager.setMove(moveNumber);
+		board.undoMove(moveNumber);
+		chessboard.update(true);
+	}
 }
