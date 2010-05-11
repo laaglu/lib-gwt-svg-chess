@@ -268,6 +268,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	public void onMouseDown(MouseDownEvent event) {
 //		GWT.log("onMouseDown(" + toString(event) + "))", null);
 		onMouseDown_(event);
+		event.stopPropagation();
+		event.preventDefault();
 	}
 	
 	private void onMouseDown_(MouseEvent event) {
@@ -286,6 +288,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				targetPiece = null;
 			}
 		}
+		event.stopPropagation();
+		event.preventDefault();
 	}
 
 	@Override
@@ -307,7 +311,6 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 					}
 					
 				});
-				event.stopPropagation();
 			} else {
 				targetPiece.getX().getBaseVal().setValue(getX(srcIndex));
 				targetPiece.getY().getBaseVal().setValue(getY(srcIndex));
@@ -317,6 +320,8 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		} else {
 			onMouseDown_(event);
 		}
+		event.stopPropagation();
+		event.preventDefault();
 	}
 
 	@Override
@@ -340,6 +345,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 			}
 		}
 		event.stopPropagation();
+		event.preventDefault();
 	}
 	
 	public OMSVGPoint getLocalCoordinates(MouseEvent e) {
