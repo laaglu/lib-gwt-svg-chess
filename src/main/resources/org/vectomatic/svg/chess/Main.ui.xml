@@ -4,10 +4,10 @@
 	<ui:with field='style' type='org.vectomatic.svg.chess.ChessCss' />
 	<g:DecoratorPanel>
 		<g:TabPanel ui:field='tabPanel' width="100%">
-			<g:Tab>
+			<g:Tab text="">
 				<g:HTML ui:field="boardContainer"></g:HTML>
 			</g:Tab>
-			<g:Tab>
+			<g:Tab text="">
 				<g:VerticalPanel width="100%">
 					<g:Label ui:field='currentPlayerLabel' text="{constants.player}"
 						styleName="{style.categoryLabel}" />
@@ -23,7 +23,7 @@
 					</g:HorizontalPanel>
 				</g:VerticalPanel>
 			</g:Tab>
-			<g:Tab>
+			<g:Tab text="">
 				<g:VerticalPanel width="100%">
 					<g:Label ui:field='modeLabel' text="{constants.mode}"
 						styleName="{style.categoryLabel}" />
@@ -45,7 +45,7 @@
 					</g:HorizontalPanel>
 				</g:VerticalPanel>
 			</g:Tab>
-			<g:Tab>
+			<g:Tab text="">
 				<g:HTML ui:field="about"></g:HTML>
 			</g:Tab>
 		</g:TabPanel>

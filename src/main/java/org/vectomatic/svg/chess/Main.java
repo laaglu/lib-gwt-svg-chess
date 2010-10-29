@@ -30,6 +30,8 @@ import com.alonsoruibal.chess.search.SearchObserver;
 import com.alonsoruibal.chess.search.SearchStatusInfo;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -40,15 +42,16 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DecoratedPopupPanel;
 import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -56,8 +59,8 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.widgetideas.client.HSliderBar;
 import com.google.gwt.widgetideas.client.SliderBar;
-import com.google.gwt.widgetideas.client.SliderListenerAdapter;
 import com.google.gwt.widgetideas.client.SliderBar.LabelFormatter;
+import com.google.gwt.widgetideas.client.SliderListenerAdapter;
 
 /**
  * Main class. Instantiates the UI and runs the game loop
@@ -196,65 +199,79 @@ public class Main implements EntryPoint, SearchObserver {
 	 * GWT entry point
 	 */
 	public void onModuleLoad() {
-		// Inject CSS in the document headers
-		StyleInjector.inject(Resources.INSTANCE.getCss().getText());
-		
-		// Create a Carballo chess engine
-		engine = new SearchEngine(new StaticConfig(), new JSONBook(), new JSONAttackGenerator());
-		engine.setObserver(this);
-		board = engine.getBoard();
-		moveTimeIndex = 0;
-
-		// Instantiate UI
-		DecoratorPanel binderPanel = mainBinder.createAndBindUi(this);
-		confirmBox = ConfirmBox.createConfirmBox(this);
-		advancedPanel.getHeaderTextAccessor().setText(constants.advanced());
-		
-		modeListBox.addItem(ChessMode.whitesVsComputer.getDescription(), ChessMode.whitesVsComputer.name());
-		modeListBox.addItem(ChessMode.blacksVsComputer.getDescription(), ChessMode.blacksVsComputer.name());
-		modeListBox.addItem(ChessMode.whitesVsBlacks.getDescription(), ChessMode.whitesVsBlacks.name());
-		modeListBox.addItem(ChessMode.computerVsComputer.getDescription(), ChessMode.computerVsComputer.name());
-		modeListBox.setSelectedIndex(0);
-		
-		tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.boardTab());
-		tabPanel.getTabBar().setTabText(1, ChessConstants.INSTANCE.infoTab());
-		tabPanel.getTabBar().setTabText(2, ChessConstants.INSTANCE.settingsTab());
-		tabPanel.getTabBar().setTabText(3, ChessConstants.INSTANCE.aboutTab());
-		tabPanel.selectTab(0);
-		about.setHTML(ChessConstants.INSTANCE.about());
-		RootPanel.get("uiRoot").add(binderPanel);
-		
-		// Parse the SVG chessboard and insert it in the HTML UI
-		// Note that the elements must be imported in the UI since they come from another XML document
-		boardDiv = boardContainer.getElement();
-		boardElt = OMSVGParser.parse(Resources.INSTANCE.getBoard().getText());
-		boardDiv.appendChild(boardElt.getElement());
-
-		// Create the object to animate the SVG chessboard
-		chessboard = new ChessBoard(board, boardElt, this);
-
-		// Handle resizing issues.
-		ResizeHandler resizeHandler = new ResizeHandler() {
+		final DecoratedPopupPanel initBox = new DecoratedPopupPanel();
+		HorizontalPanel hpanel = new HorizontalPanel();
+		hpanel.add(new Image(Resources.INSTANCE.getWaitImage()));
+		hpanel.add(new Label(ChessConstants.INSTANCE.waitMessage()));
+		initBox.add(hpanel);
+		initBox.center();
+		initBox.show();
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {	
 			@Override
-			public void onResize(ResizeEvent event) {
-				int width = Window.getClientWidth() - 20;
-				int height = getHeight();
+			public void execute() {
+				// Inject CSS in the document headers
+				StyleInjector.inject(Resources.INSTANCE.getCss().getText());
+				
+				// Create a Carballo chess engine
+				engine = new SearchEngine(new StaticConfig(), new JSONBook(), new JSONAttackGenerator());
+				engine.setObserver(Main.this);
+				board = engine.getBoard();
 		
-				int size = Math.min(width, height);
-				boardDiv.getStyle().setWidth(size, Style.Unit.PX);
-				boardDiv.getStyle().setHeight(size, Style.Unit.PX);
-				boardElt.getStyle().setWidth(size, Style.Unit.PX);
-				boardElt.getStyle().setHeight(size, Style.Unit.PX);
+				// Instantiate UI
+				DecoratorPanel binderPanel = mainBinder.createAndBindUi(Main.this);
+				confirmBox = ConfirmBox.createConfirmBox(Main.this);
+				advancedPanel.getHeaderTextAccessor().setText(constants.advanced());
+				
+				modeListBox.addItem(ChessMode.whitesVsComputer.getDescription(), ChessMode.whitesVsComputer.name());
+				modeListBox.addItem(ChessMode.blacksVsComputer.getDescription(), ChessMode.blacksVsComputer.name());
+				modeListBox.addItem(ChessMode.whitesVsBlacks.getDescription(), ChessMode.whitesVsBlacks.name());
+				modeListBox.addItem(ChessMode.computerVsComputer.getDescription(), ChessMode.computerVsComputer.name());
+				modeListBox.setSelectedIndex(0);
+				
+				tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.boardTab());
+				tabPanel.getTabBar().setTabText(1, ChessConstants.INSTANCE.infoTab());
+				tabPanel.getTabBar().setTabText(2, ChessConstants.INSTANCE.settingsTab());
+				tabPanel.getTabBar().setTabText(3, ChessConstants.INSTANCE.aboutTab());
+				tabPanel.selectTab(0);
+				about.setHTML(ChessConstants.INSTANCE.about());
+				RootPanel.get("uiRoot").add(binderPanel);
+				
+				// Parse the SVG chessboard and insert it in the HTML UI
+				// Note that the elements must be imported in the UI since they come from another XML document
+				boardDiv = boardContainer.getElement();
+				boardElt = OMSVGParser.parse(Resources.INSTANCE.getBoard().getText());
+				boardDiv.appendChild(boardElt.getElement());
+		
+				// Create the SVG chessboard. Use a temporary chessboard
+				// until the engine has been initialized
+				chessboard = new ChessBoard(board, boardElt, Main.this);
+		
+				// Handle resizing issues.
+				ResizeHandler resizeHandler = new ResizeHandler() {
+					@Override
+					public void onResize(ResizeEvent event) {
+						int width = Window.getClientWidth() - 20;
+						int height = getHeight();
+				
+						int size = Math.min(width, height);
+						boardDiv.getStyle().setWidth(size, Style.Unit.PX);
+						boardDiv.getStyle().setHeight(size, Style.Unit.PX);
+						boardElt.getStyle().setWidth(size, Style.Unit.PX);
+						boardElt.getStyle().setHeight(size, Style.Unit.PX);
+					}
+				};
+				Window.addResizeHandler(resizeHandler);
+				resizeHandler.onResize(null);
+				
+				// Add undo-redo support through the browser back/forward buttons
+				historyManager = GWT.create(HistoryManager.class);
+				historyManager.initialize(Main.this);
+		
+				moveTimeIndex = 0;
+				restart();
+				initBox.hide();
 			}
-		};
-		Window.addResizeHandler(resizeHandler);
-		resizeHandler.onResize(null);
-		
-		// Add undo-redo support through the browser back/forward buttons
-		historyManager = GWT.create(HistoryManager.class);
-		historyManager.initialize(this);
-		
-		restart();
+		});
 	}
 
 	/**
@@ -355,11 +372,12 @@ public class Main implements EntryPoint, SearchObserver {
 	 * Invoked to make the computer play the next move
 	 */
 	private void computerMove() {
-		DeferredCommand.addCommand(new Command() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
 				engine.go(moveTimes[moveTimeIndex]);
 			}
+			
 		});
 	}
 

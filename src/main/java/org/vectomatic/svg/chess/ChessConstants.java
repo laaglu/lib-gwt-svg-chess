@@ -53,6 +53,7 @@ public interface ChessConstants extends Constants {
 	public String confirmRestart();
 	public String confirmYes();
 	public String confirmNo();
+	public String waitMessage();
 
 	public String mt3s();
 	public String mt10s();

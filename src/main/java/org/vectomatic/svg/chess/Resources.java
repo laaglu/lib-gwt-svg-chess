@@ -19,6 +19,7 @@ package org.vectomatic.svg.chess;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.resources.client.TextResource;
 
 public interface Resources extends ClientBundle {
@@ -27,5 +28,7 @@ public interface Resources extends ClientBundle {
 	public TextResource getBoard();
 	@Source("chess.css")
 	public ChessCss getCss();
+	@Source("macthrob-small.png")
+	public ImageResource getWaitImage();
 
 }
