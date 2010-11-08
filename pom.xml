@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.vectomatic</groupId>
 	<artifactId>lib-gwt-svg-chess</artifactId>
 	<name>lib-gwt-svg-chess</name>
 	<packaging>war</packaging>
-	<version>0.3.9-SNAPSHOT</version>
+	<version>0.3.9</version>
 	<description>A chess game for web browsers. It uses the Carballo chess engine for chess computations and lib-gwt-svg for the SVG UI. These components are integrated using GWT.</description>
 	<url>http://www.vectomatic.org/lib-gwt-svg-chess</url>
 	<licenses>
@@ -15,9 +14,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<url>http://code.google.com/p/vectomatic/source/browse/#svn/lib-gwt-svg-chess/trunk</url>
-		<connection>scm:svn:http://vectomatic.googlecode.com/svn/lib-gwt-svg-chess/trunk</connection>
-		<developerConnection>scm:svn:file:///home/laaglu/svn/laaglu-svn/lib-gwt-svg-chess/trunk</developerConnection>
+		<url>http://code.google.com/p/vectomatic/source/browse/#svn/lib-gwt-svg-chess/tags/0.3.9</url>
+		<connection>scm:svn:http://vectomatic.googlecode.com/svn/lib-gwt-svg-chess/tags/0.3.9</connection>
+		<developerConnection>scm:svn:file:///home/laaglu/svn/laaglu-svn/lib-gwt-svg-chess/tags/0.3.9</developerConnection>
 	</scm>
 	<developers>
 		<developer>
