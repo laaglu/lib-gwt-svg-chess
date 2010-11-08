@@ -117,7 +117,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		this.board = board;
 		this.svgElt = svgElt;
 		this.main = main;
-		this.boardDoc = svgElt.getOwnerDocument();
+		this.boardDoc = (OMSVGDocument) svgElt.getOwnerDocument();
 		this.boardElt = (OMSVGGElement) boardDoc.getElementById("board");
 		this.css = Resources.INSTANCE.getCss();
 		this.srcToDestIndex = new HashMap<Integer, Set<Integer>>();

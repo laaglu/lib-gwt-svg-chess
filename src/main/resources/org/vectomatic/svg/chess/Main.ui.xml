@@ -2,52 +2,66 @@
 	xmlns:g='urn:import:com.google.gwt.user.client.ui' xmlns:i='urn:import:com.google.gwt.widgetideas.client'>
 	<ui:with field='constants' type='org.vectomatic.svg.chess.ChessConstants' />
 	<ui:with field='style' type='org.vectomatic.svg.chess.ChessCss' />
-	<g:DecoratorPanel>
-		<g:TabPanel ui:field='tabPanel' width="100%">
-			<g:Tab>
-				<g:HTML ui:field="boardContainer"></g:HTML>
-			</g:Tab>
-			<g:Tab>
-				<g:VerticalPanel width="100%">
-					<g:Label ui:field='currentPlayerLabel' text="{constants.player}"
-						styleName="{style.categoryLabel}" />
-					<g:Label ui:field='currentPlayerValueLabel' />
-					<g:Label ui:field='historyLabel' text="{constants.history}"
-						styleName="{style.categoryLabel}" />
-					<g:ScrollPanel alwaysShowScrollBars="true" height="400px">
-						<g:TextArea ui:field='historyArea' width="100%"/>
-					</g:ScrollPanel>
-					<g:HorizontalPanel>
-						<g:Button ui:field='undoButton' text="{constants.undo}" />
-						<g:Button ui:field='redoButton' text="{constants.redo}" />
-					</g:HorizontalPanel>
-				</g:VerticalPanel>
-			</g:Tab>
-			<g:Tab>
-				<g:VerticalPanel width="100%">
-					<g:Label ui:field='modeLabel' text="{constants.mode}"
-						styleName="{style.categoryLabel}" />
-					<g:ListBox ui:field='modeListBox' />
-					<g:Label ui:field='reflectionLabel' text="{constants.reflectionTime}"
-						styleName="{style.categoryLabel}" />
-					<i:HSliderBar ui:field='reflectionSlider' />
-					<g:DisclosurePanel ui:field='advancedPanel' width="100%">
-						<g:header />
-						<g:VerticalPanel width="100%">
-							<g:Label ui:field='fenLabel' text="{constants.fen}"
+	
+	<g:SplitLayoutPanel>
+		<g:center>
+			<g:HTML ui:field="boardContainer"></g:HTML>
+		</g:center>
+		<g:east size="200">
+			<g:StackLayoutPanel unit='EM'>
+				<g:stack>
+					<g:customHeader size="2"><g:Label text="{constants.infoTab}"/></g:customHeader>
+					<g:SimplePanel>
+						<g:FlowPanel>
+							<g:Label ui:field='currentPlayerLabel' text="{constants.player}"
 								styleName="{style.categoryLabel}" />
-							<g:TextArea ui:field='fenArea' width="100%" visibleLines='4'/>
-							<g:Button ui:field='fenButton' text="{constants.setFen}" />
-						</g:VerticalPanel>
-					</g:DisclosurePanel>
-					<g:HorizontalPanel>
-						<g:Button ui:field='restartButton' text="{constants.restart}" />
-					</g:HorizontalPanel>
-				</g:VerticalPanel>
-			</g:Tab>
-			<g:Tab>
-				<g:HTML ui:field="about"></g:HTML>
-			</g:Tab>
-		</g:TabPanel>
-	</g:DecoratorPanel>
+							<g:Label ui:field='currentPlayerValueLabel' />
+							<g:Label ui:field='historyLabel' text="{constants.history}"
+								styleName="{style.categoryLabel}" />
+							<g:ScrollPanel alwaysShowScrollBars="true" height="400px">
+								<g:TextArea ui:field='historyArea' width="100%"/>
+							</g:ScrollPanel>
+							<g:HorizontalPanel>
+								<g:Button ui:field='undoButton' text="{constants.undo}" />
+								<g:Button ui:field='redoButton' text="{constants.redo}" />
+							</g:HorizontalPanel>
+						</g:FlowPanel>
+					</g:SimplePanel>
+				</g:stack>
+				<g:stack>
+					<g:customHeader size="2"><g:Label text="{constants.settingsTab}"/></g:customHeader>
+					<g:SimplePanel>
+						<g:FlowPanel>
+							<g:Label ui:field='modeLabel' text="{constants.mode}"
+								styleName="{style.categoryLabel}" />
+							<g:ListBox ui:field='modeListBox' />
+							<g:Label ui:field='reflectionLabel' text="{constants.reflectionTime}"
+								styleName="{style.categoryLabel}" />
+							<i:HSliderBar ui:field='reflectionSlider' />
+							<g:DisclosurePanel ui:field='advancedPanel' width="100%">
+								<g:header />
+								<g:VerticalPanel width="100%">
+									<g:Label ui:field='fenLabel' text="{constants.fen}"
+										styleName="{style.categoryLabel}" />
+									<g:TextArea ui:field='fenArea' width="100%" visibleLines='4'/>
+									<g:Button ui:field='fenButton' text="{constants.setFen}" />
+								</g:VerticalPanel>
+							</g:DisclosurePanel>
+							<g:HorizontalPanel>
+								<g:Button ui:field='restartButton' text="{constants.restart}" />
+							</g:HorizontalPanel>
+						</g:FlowPanel>
+					</g:SimplePanel>
+				</g:stack>
+				<g:stack>
+					<g:customHeader size="2"><g:Label text="{constants.aboutTab}"/></g:customHeader>
+					<g:SimplePanel>
+						<g:FlowPanel>
+							<g:HTML ui:field="about"></g:HTML>
+						</g:FlowPanel>
+					</g:SimplePanel>
+				</g:stack>
+			</g:StackLayoutPanel>
+		</g:east>
+	</g:SplitLayoutPanel>
 </ui:UiBinder>

@@ -30,7 +30,6 @@ public interface ChessConstants extends Constants {
 	public String white();
 	public String black();
 	
-	public String boardTab();
 	public String infoTab();
 	public String settingsTab();
 	public String aboutTab();
@@ -53,6 +52,7 @@ public interface ChessConstants extends Constants {
 	public String confirmRestart();
 	public String confirmYes();
 	public String confirmNo();
+	public String waitMessage();
 
 	public String mt3s();
 	public String mt10s();
