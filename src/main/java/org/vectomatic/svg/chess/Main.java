@@ -32,12 +32,9 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.logical.shared.ResizeEvent;
-import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
@@ -46,7 +43,6 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DecoratedPopupPanel;
-import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -54,8 +50,8 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.TabPanel;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.widgetideas.client.HSliderBar;
 import com.google.gwt.widgetideas.client.SliderBar;
@@ -66,7 +62,7 @@ import com.google.gwt.widgetideas.client.SliderListenerAdapter;
  * Main class. Instantiates the UI and runs the game loop
  */
 public class Main implements EntryPoint, SearchObserver {
-	interface MainBinder extends UiBinder<DecoratorPanel, Main> {
+	interface MainBinder extends UiBinder<SplitLayoutPanel, Main> {
 	}
 	private static MainBinder mainBinder = GWT.create(MainBinder.class);
 
@@ -86,8 +82,6 @@ public class Main implements EntryPoint, SearchObserver {
 	@UiField
 	Button redoButton;
 
-	@UiField
-	TabPanel tabPanel;
 	@UiField
 	DisclosurePanel advancedPanel;
 	
@@ -218,7 +212,7 @@ public class Main implements EntryPoint, SearchObserver {
 				board = engine.getBoard();
 		
 				// Instantiate UI
-				DecoratorPanel binderPanel = mainBinder.createAndBindUi(Main.this);
+				SplitLayoutPanel binderPanel = mainBinder.createAndBindUi(Main.this);
 				confirmBox = ConfirmBox.createConfirmBox(Main.this);
 				advancedPanel.getHeaderTextAccessor().setText(constants.advanced());
 				
@@ -228,13 +222,8 @@ public class Main implements EntryPoint, SearchObserver {
 				modeListBox.addItem(ChessMode.computerVsComputer.getDescription(), ChessMode.computerVsComputer.name());
 				modeListBox.setSelectedIndex(0);
 				
-				tabPanel.getTabBar().setTabText(0, ChessConstants.INSTANCE.boardTab());
-				tabPanel.getTabBar().setTabText(1, ChessConstants.INSTANCE.infoTab());
-				tabPanel.getTabBar().setTabText(2, ChessConstants.INSTANCE.settingsTab());
-				tabPanel.getTabBar().setTabText(3, ChessConstants.INSTANCE.aboutTab());
-				tabPanel.selectTab(0);
 				about.setHTML(ChessConstants.INSTANCE.about());
-				RootPanel.get("uiRoot").add(binderPanel);
+				RootLayoutPanel.get().add(binderPanel);
 				
 				// Parse the SVG chessboard and insert it in the HTML UI
 				// Note that the elements must be imported in the UI since they come from another XML document
@@ -246,23 +235,6 @@ public class Main implements EntryPoint, SearchObserver {
 				// until the engine has been initialized
 				chessboard = new ChessBoard(board, boardElt, Main.this);
 		
-				// Handle resizing issues.
-				ResizeHandler resizeHandler = new ResizeHandler() {
-					@Override
-					public void onResize(ResizeEvent event) {
-						int width = Window.getClientWidth() - 20;
-						int height = getHeight();
-				
-						int size = Math.min(width, height);
-						boardDiv.getStyle().setWidth(size, Style.Unit.PX);
-						boardDiv.getStyle().setHeight(size, Style.Unit.PX);
-						boardElt.getStyle().setWidth(size, Style.Unit.PX);
-						boardElt.getStyle().setHeight(size, Style.Unit.PX);
-					}
-				};
-				Window.addResizeHandler(resizeHandler);
-				resizeHandler.onResize(null);
-				
 				// Add undo-redo support through the browser back/forward buttons
 				historyManager = GWT.create(HistoryManager.class);
 				historyManager.initialize(Main.this);
