@@ -4,10 +4,7 @@
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/" source-path="/src/main/webapp"/>
-        <dependent-module deploy-path="/WEB-INF/lib" handle="module:/resource/carballo/carballo">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module deploy-path="/WEB-INF/lib" handle="module:/resource/carballo-gwt/carballo-gwt">
+        <dependent-module deploy-path="/WEB-INF/lib" handle="module:/resource/lib-gwt-svg/lib-gwt-svg">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="context-root" value="libgwtsvg-chess"/>
