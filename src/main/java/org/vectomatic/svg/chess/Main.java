@@ -457,4 +457,3 @@ public class Main implements EntryPoint, SearchObserver {
 		chessboard.update(true);
 	}
 }
-
