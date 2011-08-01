@@ -17,7 +17,6 @@
  **********************************************/
 package org.vectomatic.svg.chess;
 
-import com.alonsoruibal.chess.Move;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -122,7 +121,7 @@ public class HistoryManagerMozilla extends HistoryManager {
 	@Override
 	public void addMove() {
 		int moveNumber = main.board.getMoveNumber();
-		History.newItem(Integer.toString(moveNumber) + "_" + Move.toStringExt(main.board.getMoveHistory()[moveNumber - 1]), false);
+		History.newItem(Integer.toString(moveNumber) + "_" + main.board.getSanMove(moveNumber - 1), false);
 	}
 
 	@Override

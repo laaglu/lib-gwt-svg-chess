@@ -21,12 +21,11 @@ import org.vectomatic.dom.svg.OMSVGSVGElement;
 import org.vectomatic.dom.svg.utils.OMSVGParser;
 
 import com.alonsoruibal.chess.Board;
+import com.alonsoruibal.chess.Config;
 import com.alonsoruibal.chess.Move;
-import com.alonsoruibal.chess.StaticConfig;
-import com.alonsoruibal.chess.bitboard.JSONAttackGenerator;
-import com.alonsoruibal.chess.book.JSONBook;
 import com.alonsoruibal.chess.search.SearchEngine;
 import com.alonsoruibal.chess.search.SearchObserver;
+import com.alonsoruibal.chess.search.SearchParameters;
 import com.alonsoruibal.chess.search.SearchStatusInfo;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -207,7 +206,9 @@ public class Main implements EntryPoint, SearchObserver {
 				StyleInjector.inject(Resources.INSTANCE.getCss().getText());
 				
 				// Create a Carballo chess engine
-				engine = new SearchEngine(new StaticConfig(), new JSONBook(), new JSONAttackGenerator());
+				Config config = new Config();
+				config.setBook(new JSONBook());
+				engine = new SearchEngine(config);
 				engine.setObserver(Main.this);
 				board = engine.getBoard();
 		
@@ -251,16 +252,16 @@ public class Main implements EntryPoint, SearchObserver {
 	 */
 	private void updateUI() {
 		StringBuffer buffer = new StringBuffer();
-		int[] moves = board.getMoveHistory();
 		int count = board.getMoveNumber();
 		for (int i = firstMoveNumber; i < count; i++) {
-			String move = Move.toStringExt(moves[i]);
+			String move = board.getSanMove(i);
+			assert move != null;
 			if (i > 0) {
 				buffer.append("\n");
 			}
 			buffer.append((i + 1) + ". " + move);
 		}
-		historyArea.setVisibleLines(count);
+		historyArea.setVisibleLines(count == 0 ? 1 : count);
 		historyArea.setText(buffer.toString());
 		fenArea.setText(board.getFen());
 		currentPlayerValueLabel.setText(board.getTurn() ? ChessConstants.INSTANCE.white() : ChessConstants.INSTANCE.black());
@@ -347,7 +348,7 @@ public class Main implements EntryPoint, SearchObserver {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
-				engine.go(moveTimes[moveTimeIndex]);
+				engine.go(SearchParameters.get(moveTimes[moveTimeIndex]));
 			}
 			
 		});

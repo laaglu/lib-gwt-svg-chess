@@ -38,6 +38,7 @@ import com.alonsoruibal.chess.bitboard.BitboardUtils;
 import com.alonsoruibal.chess.movegen.LegalMoveGenerator;
 import com.alonsoruibal.chess.movegen.MoveGenerator;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
@@ -47,7 +48,6 @@ import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
 
 /**
  * Class to update the SVG chess board
@@ -255,7 +255,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				}
 
 				// Update the piece on this square, if any
-				char piece = board.pieceAt(BitboardUtils.index2Square((byte)index));
+				char piece = board.getPieceAt(BitboardUtils.index2Square((byte)index));
 				if (getPiece(squareId) != piece) {
 					removePiece(squareId);
 					addPiece(piece, squareId);
@@ -272,7 +272,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		event.preventDefault();
 	}
 	
-	private void onMouseDown_(MouseEvent event) {
+	private void onMouseDown_(MouseEvent<?> event) {
 		String algebraic = getAlgebraic(event);
 		if (targetPiece == null) {
 			targetPiece = algebraicToPieces.get(algebraic);
@@ -304,7 +304,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 				board.doMove(move);
 				GWT.log("newItem(" + board.getMoveNumber() +  ")", null);
 				main.addMove();
-				DeferredCommand.addCommand(new Command() {
+				Scheduler.get().scheduleDeferred(new Command() {
 					@Override
 					public void execute() {
 						main.nextMove();
@@ -348,7 +348,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 		event.preventDefault();
 	}
 	
-	public OMSVGPoint getLocalCoordinates(MouseEvent e) {
+	public OMSVGPoint getLocalCoordinates(MouseEvent<?> e) {
 		OMSVGPoint p = svgElt.createSVGPoint(e.getClientX(), e.getClientY());
 		OMSVGMatrix m = boardElt.getScreenCTM().inverse();
 		return p.matrixTransform(m);
@@ -369,7 +369,7 @@ public class ChessBoard implements MouseDownHandler, MouseUpHandler, MouseMoveHa
 	 * @return
 	 * The algebraic corresponding to a mouse event
 	 */
-	public String getAlgebraic(MouseEvent event) {
+	public String getAlgebraic(MouseEvent<?> event) {
 
 		OMSVGPoint p = getLocalCoordinates(event);
 		int x = (int)(p.getX() / sqWidth);
