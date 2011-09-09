@@ -207,6 +207,7 @@ public class Main implements EntryPoint, SearchObserver {
 				
 				// Create a Carballo chess engine
 				Config config = new Config();
+				config.setTranspositionTableSize(2);
 				config.setBook(new JSONBook());
 				engine = new SearchEngine(config);
 				engine.setObserver(Main.this);
