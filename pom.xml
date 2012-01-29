@@ -101,6 +101,8 @@
 				</configuration>
 			</plugin>
 			<!--  configure the GWT-Maven plugin -->
+			<!-- You can defined the google.webtoolkit.home property if you want to use a
+			local GWT installation -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>
@@ -159,7 +161,6 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<finalName>lib-gwt-svg-chess</finalName>
 	</build>
 	<reporting>
 		<plugins>
@@ -197,18 +198,6 @@
 			</plugin>
 		</plugins>
 	</reporting>
-	<distributionManagement>
-		<repository>
-			<id>${deployment.id}</id>
-			<name>maven repository</name>
-			<url>${deployment.root}/mvn</url>
-		</repository>
-		<site>
-			<id>${deployment.id}</id>
-			<name>maven site</name>
-			<url>${deployment.root}/mvn-sites/${project.artifactId}</url>
-		</site>
-	</distributionManagement>
 	<profiles>
 		<!-- There are two build profiles: development and production
 		+ by default, the production profile is assumed
@@ -223,8 +212,6 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
-				<deployment.id>local-server</deployment.id>
-				<deployment.root>scp://localhost/var/www/vectomatic</deployment.root>
  				<!-- Build options for development mode -->
     			<gwt.style>DETAILED</gwt.style>
     			<gwt.logLevel>WARN</gwt.logLevel>
