@@ -18,9 +18,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<url>http://code.google.com/p/vectomatic/source/browse/#svn/lib-gwt-svg-chess/trunk</url>
-		<connection>scm:svn:http://vectomatic.googlecode.com/svn/lib-gwt-svg-chess/trunk</connection>
-		<developerConnection>scm:svn:file:///home/laaglu/svn/laaglu-svn/lib-gwt-svg-chess/trunk</developerConnection>
+		<url>scm:git:git@github.com:laaglu/lib-gwt-svg-chess.git</url>
+		<connection>scm:git:git@github.com:laaglu/lib-gwt-svg-chess.git</connection>
+		<developerConnection>scm:git:git@github.com:laaglu/lib-gwt-svg-chess.git</developerConnection>
 	</scm>
 	<dependencies>
 		<dependency>
