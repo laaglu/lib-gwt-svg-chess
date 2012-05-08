@@ -1,3 +1,5 @@
-#Thu Feb 11 11:11:28 CET 2010
 eclipse.preferences.version=1
+encoding//src/main/java=UTF-8
+encoding//src/main/resources=UTF-8
 encoding//src/main/resources/org/vectomatic/svg/chess/ChessConstants_fr.properties=UTF-8
+encoding/<project>=UTF-8
