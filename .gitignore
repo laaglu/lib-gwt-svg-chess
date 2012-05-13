@@ -2,3 +2,5 @@
 # /
 /target
 /gwt-unitCache
+/war/org.vectomatic.libgwtsvgchess
+/war/WEB-INF/deploy
