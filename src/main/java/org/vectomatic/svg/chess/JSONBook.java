@@ -111,7 +111,7 @@ public class JSONBook implements Book {
 	
 	/**
 	 * Gets a random move from the book taking care of weights 
-	 * @param fen
+	 * @param board
 	 * @return
 	 */
 	public int getMove(Board board) {
