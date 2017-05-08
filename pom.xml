@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.vectomatic</groupId>
 		<artifactId>vectomatic-gwt-parent</artifactId>
-		<version>0.6</version>
+		<version>0.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>lib-gwt-svg-chess</artifactId>
 	<name>lib-gwt-svg-chess</name>
@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.vectomatic</groupId>
 			<artifactId>lib-gwt-svg</artifactId>
-			<version>0.5.12</version>
+			<version>0.5.13-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.alonsoruibal</groupId>
@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>com.google</groupId>
 			<artifactId>gwt-incubator-slider</artifactId>
-			<version>0.1.5</version>
+			<version>0.1.6-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<properties>
