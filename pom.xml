@@ -8,7 +8,7 @@
 	<artifactId>lib-gwt-svg-chess</artifactId>
 	<name>lib-gwt-svg-chess</name>
 	<packaging>war</packaging>
-	<version>0.4.10-SNAPSHOT</version>
+	<version>0.4.10</version>
 	<description>A chess game for web browsers. It uses the Carballo chess engine for chess computations and lib-gwt-svg for the SVG UI. These components are integrated using GWT.</description>
 	<url>http://www.vectomatic.org/lib-gwt-svg-chess</url>
 	<licenses>
@@ -21,7 +21,7 @@
 		<url>scm:git:git://git/lib-gwt-svg-chess.git</url>
 		<connection>scm:git:git://git/lib-gwt-svg-chess.git</connection>
 		<developerConnection>scm:git:git://git/lib-gwt-svg-chess.git</developerConnection>
-	  <tag>HEAD</tag>
+	  <tag>0.4.10</tag>
   </scm>
 	<dependencies>
 		<dependency>
